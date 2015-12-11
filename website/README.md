@@ -6,3 +6,11 @@ Python modules required:
 You can also pip and requirements.txt
 
 python generate.py download.md download.html
+
+to test generate html, please use:
+
+python -m SimpleHTTPServer
+
+then in your browser:
+
+  0.0.0.0:8000

@@ -7,7 +7,7 @@ output = """<!DOCTYPE html>
 
 <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="view-source:http://www.mgb-challenge.org/style.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="http://mgb-challenge.org/style.css" media="screen" />
 </head>
 
 <body>
