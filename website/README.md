@@ -5,7 +5,7 @@ Python modules required:
 
 You can also pip and requirements.txt
 
-python generate.py download.md download.html
+bash make.sh
 
 to test generate html, please use:
 
