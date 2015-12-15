@@ -1,0 +1,69 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr">
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+	<meta name="description" content=""/>
+	<meta name="keywords" content="" />
+	<meta name="author" content="" />
+	<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+	<title>MGB Challenge - Downloads</title>
+</head>
+
+<body>
+
+<div id="site-wrapper">
+
+	<div id="header">
+
+		<div id="top">
+
+			<div class="left" id="logo">
+				<a href="index.html"><img src="img/logo.gif" alt="" /></a>
+			</div>
+
+
+
+			<div class="left navigation" id="main-nav">
+
+				<ul class="tabbed">
+					<li><a href="index.html" class="firstLink">Home</a></li>
+<li><a href="dates.html" title="Dates">Dates</a></li>
+<li><a href="registration.html" title="Registration">Registration</a></li>
+
+				</ul>
+
+				<div class="clearer">&nbsp;</div>
+
+			</div>
+				
+			<div class="clearer">&nbsp;</div>
+
+		</div>
+
+		<div class="navigation" id="sub-nav">
+
+			<ul class="tabbed">
+			   <li><a href="arabic-tasks.html" title="Evaluation tasks">Evaluation tasks</a></li>
+<li class="current-tab"><a href="arabic-download.html" title="Downloads">Downloads</a></li>
+<li><a href="arabic-upload.html" title="Submissions">Submissions</a></li>
+<li><a href="arabic-recipe.html" title="Recipe">Recipe</a></li>
+<li><a href="asru2015.html" title="ASRU 2015">ASRU 2015</a></li>
+
+			</ul>
+
+			<div class="clearer">&nbsp;</div>
+
+		</div>
+
+	</div>
+
+	<div class="main">
+
+			
+
+
+
+<script src="jquery-1.11.2.min.js"></script>
+

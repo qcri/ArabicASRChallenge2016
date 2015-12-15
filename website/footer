@@ -1,0 +1,33 @@
+
+<div id="footer">
+
+<div class="left" id="footer-left">
+
+<img src="img/logo-small.gif" alt="" class="left" />
+
+<p> Copyright &copy; 2015 University of Edinburgh | By Peter Bell | Website template by <a href="http://arcsin.se/">Arcsin</a> </p>
+
+<p> Copyright &copy; 2015 Qatar Computing Research Institute, HBKU | By Yifan Zhang, Ahmed Ali </p>
+
+<p> Special thanks to <a href="http://aljazeera.net">Aljazeera</a> </p>
+
+<br><span class="quiet">This page was last modified on Sat 11 Jul 2015 at 15:10</span>   
+
+<div class="clearer">&nbsp;</div>
+
+</div>
+<!--
+<div class="right" id="footer-right">
+
+<p class="large"><a href="#">Blog</a> <span class="text-separator">|</span> <a href="#">Events</a> <span class="text-separator">|</span> <a href="#">About</a> <span class="text-separator">|</span> <a href="#">Archives</a> <span class="text-separator">|</span> <strong><a href="#">Join Us!</a></strong> <span class="text-separator">|</span> <a href="#top" class="quiet">Page Top &uarr;</a></p>
+
+</div>
+-->
+<div class="clearer">&nbsp;</div>
+
+</div>
+
+</div>
+
+</body>
+</html>

@@ -2,24 +2,23 @@ import markdown2
 import os, sys
 
 
-output = """<!DOCTYPE html>
-<html lang="en">
+header = open('header').read()
+footer = open('footer').read()
 
-<head>
-    <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="http://mgb-challenge.org/style.css" media="screen" />
-</head>
-
-<body>
-"""
 mkin = open(sys.argv[1])
-output += markdown2.markdown(mkin.read())
+title = mkin.readline()
+if mkin.readline().strip() != '==':
+  raise 'md format error, first line is not title'
 
-output += """</body>
+title_section = """<div class="section-title">
+<h2>%s</h2>
+</div>""" % title
 
-</html>
-"""
+output = markdown2.markdown(mkin.read())
 
 outfile = open(sys.argv[2], 'w')
+outfile.write(header)
+outfile.write(title_section)
 outfile.write(output)
+outfile.write(footer)
 outfile.close()
