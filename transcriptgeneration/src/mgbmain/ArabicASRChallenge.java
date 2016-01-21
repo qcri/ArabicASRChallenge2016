@@ -2091,7 +2091,7 @@ public class ArabicASRChallenge {
 		SpeakerInfo foundSpeakerInfo;
 		AjAsrWordInfo wordInfo;
 		AlignSegment alignSegment;
-		WordSequenceAligner aligner = new WordSequenceAligner(1, 1, 1);
+		WordSequenceAligner aligner = new WordSequenceAligner(2, 1, 1);
 
 		msg = String.format("genSrtOutput(), start");
 		System.out.println(msg);
