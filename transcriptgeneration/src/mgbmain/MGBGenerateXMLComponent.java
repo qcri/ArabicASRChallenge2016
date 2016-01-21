@@ -45,7 +45,7 @@ import mgbutils.MGBUtil;
  * @author alt-sameerk
  *
  */
-public class GenerateXMLTranscription {
+public class MGBGenerateXMLComponent {
 
 	private static ListMultimap<String, SegmentBean> segmentMap;
 	private static ListMultimap<String, String> speakersMap;

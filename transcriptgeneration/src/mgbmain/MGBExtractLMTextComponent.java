@@ -20,7 +20,7 @@ import org.xml.sax.SAXParseException;
 import mgbutils.ArabicUtils;
 import mgbutils.MGBUtil;
 
-public class ExtractLMText {
+public class MGBExtractLMTextComponent {
 
 	public static void main(String[] args) {
 

@@ -30,7 +30,7 @@ import mgbutils.WordSequenceAligner.Alignment;
  *
  * @author hmubarak
  */
-public class ArabicASRChallenge {
+public class MGBTranscriptionComponent {
 	final int MAX_SRT_WORDS_PER_LINE = 10;
 
 	final boolean SPLIT_ON_SILENCE_ONLY = true;
@@ -202,7 +202,7 @@ public class ArabicASRChallenge {
 		System.out.println(aligned[0]);
 		System.out.println(aligned[1]);
 
-		ArabicASRChallenge asr = new ArabicASRChallenge();
+		MGBTranscriptionComponent asr = new MGBTranscriptionComponent();
 
 		// arge: "D:\\Speech\\ArabicASRChallenge\\exp-2015-10-25\\" "html" "xml"
 		// "ctm" "align" "srt" "tra" "dfxp" "clean" "trs"
@@ -249,7 +249,7 @@ public class ArabicASRChallenge {
 			String newTraFilePath = System.getProperty("user.dir") + "/ALL_MOD.tra";
 			MGBUtil.fixTraSpeakers(traFileName, newTraFilePath);
 			Class.forName("mgbmain.GenerateXMLTranscription");
-			GenerateXMLTranscription.createTranscript(newTraFilePath);
+			MGBGenerateXMLComponent.createTranscript(newTraFilePath);
 
 		} catch (Exception e) {
 			e.printStackTrace();
