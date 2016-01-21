@@ -10,46 +10,16 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Writer;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import org.jsoup.Jsoup;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-
-import mgbbeans.ProgramBean;
-import mgbbeans.SegmentBean;
 import mgbutils.ArabicUtils;
 import mgbutils.MGBUtil;
 import mgbutils.WordSequenceAligner;
@@ -205,7 +175,7 @@ public class ArabicASRChallenge {
 			String traFileName = asr.parseASRFiles(args);
 			String newTraFilePath = System.getProperty("user.dir") + "/ALL_MOD.tra";
 			MGBUtil.fixTraSpeakers(traFileName, newTraFilePath);
-			Class.forName("GenerateXMLTranscription");
+			Class.forName("mgbmain.GenerateXMLTranscription");
 			GenerateXMLTranscription.createTranscript(newTraFilePath);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -2116,6 +2086,8 @@ public class ArabicASRChallenge {
 		List<String[]> sAjArr = new ArrayList<String[]>(), sAsrArr = new ArrayList<String[]>();
 		List<String[]> sAjArrChar = new ArrayList<String[]>();
 		List<String[]> sAsrArrChar = new ArrayList<String[]>();
+		String sAjBuk = null;
+		String sAsrBuk = null;
 		SpeakerInfo foundSpeakerInfo;
 		AjAsrWordInfo wordInfo;
 		AlignSegment alignSegment;
@@ -2158,8 +2130,9 @@ public class ArabicASRChallenge {
 				}
 
 				sAj = sAj.trim();
-				sAjArr.add(sAj.split(" "));
-				sAjArrChar.add(sAj.replaceAll(" ", "").split(""));
+				sAjBuk = MGBUtil.getNormaliseBukTranscriptString(sAj);
+				sAjArr.add(sAjBuk.split(" "));
+				sAjArrChar.add(sAjBuk.replaceAll(" ", "").split(""));
 
 				sAsr = "";
 				for (int k = alignSegment.start2; k <= alignSegment.end2; k++) {
@@ -2176,8 +2149,9 @@ public class ArabicASRChallenge {
 				}
 
 				sAsr = sAsr.trim();
-				sAsrArr.add(sAsr.split(" "));
-				sAsrArrChar.add(sAsr.replaceAll(" ", "").split(""));
+				sAsrBuk = MGBUtil.getNormaliseBukTranscriptString(sAsr);
+				sAsrArr.add(sAsrBuk.split(" "));
+				sAsrArrChar.add(sAsrBuk.replaceAll(" ", "").split(""));
 
 				buckwalterSpeaker = speaker;
 				speaker = speaker.replaceAll("-", " ");
@@ -2203,8 +2177,17 @@ public class ArabicASRChallenge {
 				}
 
 				allSrt += s2;
+
 				List<Alignment> alignmentInfo = aligner.align(sAjArr, sAsrArr);
 				List<Alignment> alignmentCharacter = aligner.align(sAjArrChar, sAsrArrChar);
+				Alignment wordLevelALignment = alignmentInfo.get(i);
+				Alignment characterLevelAlign = alignmentCharacter.get(i);
+				double leveDistWordLevel = MGBUtil.round(((double) (wordLevelALignment.numDeletions
+						+ wordLevelALignment.numInsertions + wordLevelALignment.numSubstitutions))
+						/ ((double) wordLevelALignment.getReferenceLength()), 2);
+				double leveDistanceCharLevel = MGBUtil.round(((double) (characterLevelAlign.numDeletions
+						+ characterLevelAlign.numInsertions + characterLevelAlign.numSubstitutions))
+						/ ((double) characterLevelAlign.getReferenceLength()), 2);
 
 				if (alignSegment.nofSegWords > 0) {
 					s2 = String.format(
@@ -2212,15 +2195,10 @@ public class ArabicASRChallenge {
 							ajFilename, buckwalterSpeaker, sStartTime, sEndTime, sAj, alignSegment.nofSegWords,
 							alignSegment.correctSegWords,
 							(alignSegment.correctSegWords * 100) / alignSegment.nofSegWords, alignSegment.nofIns,
-							alignSegment.nofDel,
-							((double) (alignmentInfo.get(0).getHypothesisLength()
-									- alignmentInfo.get(0).getNumCorrect())
-									/ (double) (alignmentInfo.get(0).getHypothesisLength())) * 100,
-							((double) (alignmentCharacter.get(0).getHypothesisLength()
-									- alignmentCharacter.get(0).getNumCorrect())
-									/ (double) (alignmentCharacter.get(0).getHypothesisLength())) * 100,
+							alignSegment.nofDel, leveDistWordLevel * 100.0, leveDistanceCharLevel * 100,
 							MGBUtil.calculateAWD(sStartTime, sEndTime, alignSegment.nofSegWords),
 							alignSegment.asrStartTimeExists, alignSegment.asrEndTimeExists);
+
 				} else {
 					s2 = String.format(
 							"%s_%s_%s_%s %s\tWords:%d Correct:%d\tCorrect:%d\tIns:%d\tDel:%d\tWMER:%s\tPMER:%s\tAWD:%s\tStart:%d\tEnd:%d\r\n",

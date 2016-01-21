@@ -132,7 +132,7 @@ public class MGBUtil {
 				ProgramBean programBean = programInfoMap.get(programID);
 				recording.setAttribute("title", programBean.getTitle());
 				recording.setAttribute("episode", "unknown");
-				recording.setAttribute("date", "unknown");
+				recording.setAttribute("date", programBean.getDate());
 				recording.setAttribute("time", "unknown");
 				recording.setAttribute("service_name", "Al Jazeera");
 				recording.setAttribute("type", "unknown");
@@ -270,7 +270,9 @@ public class MGBUtil {
 		segmentID = tabSplittedSegment[0].split("\\.xml")[0].replaceAll("-", "_");
 		wordMatchErrorRate = tabSplittedSegment[5].split(":")[1];
 		phonemeMatchErrorRate = tabSplittedSegment[6].split(":")[1];
-		awd = tabSplittedSegment[7].split(":")[1];
+		if (tabSplittedSegment[7].split(":").length > 1) {
+			awd = tabSplittedSegment[7].split(":")[1];
+		}
 
 		String segment = tabSplittedSegment[0].split("\\.xml")[1];
 		String line = segment;
@@ -303,7 +305,7 @@ public class MGBUtil {
 
 	}
 
-	private static String getNormaliseBukTranscriptString(String transcriptString) {
+	public static String getNormaliseBukTranscriptString(String transcriptString) {
 		// String normalised = transcriptString.replaceAll("[،؟:/!,؛\"]",
 		// "").replaceAll("[^0-9٠-٩]\\.[^0-9٠-٩]", "")
 		// .replaceAll("[\\(\\)\\[\\]_]", "").replaceAll("\\s\\s^\n", "

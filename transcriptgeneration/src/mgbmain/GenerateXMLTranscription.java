@@ -83,9 +83,9 @@ public class GenerateXMLTranscription {
 			e.printStackTrace();
 		}
 
-		MGBUtil.populateSpeakersMap(segmentMap);
+		speakersMap = MGBUtil.populateSpeakersMap(segmentMap);
 
-		MGBUtil.generateXML(segmentMap, speakersMap, programInfoMap, "/Users/alt-sameerk/Documents/tra/xml/");
+		MGBUtil.generateXML(segmentMap, speakersMap, programInfoMap, "/Users/alt-sameerk/Documents/tra_xml/xml_hamdy/");
 	}
 
 	private static void populateSegmentMap(SegmentBean segmentBean) {
