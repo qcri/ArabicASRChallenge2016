@@ -184,7 +184,7 @@ public class ArabicASRChallenge {
 
         ArabicASRChallenge asr = new ArabicASRChallenge();
 
-        // arge: "D:\\Speech\\ArabicASRChallenge\\exp-2015-10-25\\" "html" "xml" "ctm" "align" "srt" "tra" "dfxp" "clean" "trs"
+        // arge: "D:\\Speech\\ArabicASRChallenge\\exp-2015-10-25\\" "html" "xml" "ctm" "align" "srt" "tra" "dfxp" "clean" "trs" "mgb"
         //args[0] = "D:\\Speech\\ArabicASRChallenge\\exp-2015-11-10\\" // Folder name
         //args[1] = "html"; //sunfolder name
         //args[2] = "xml"; //Extension of Aljazeera transcription
@@ -195,6 +195,8 @@ public class ArabicASRChallenge {
         //args[7] = "dxfp"; // Extension of .dfxp file
         //args[8] = "clean; // Extension of .clean file
         //args[9] = "trs; // Extension of .trs file
+        //args[10] = "mgb; // Extension of .xml file
+        
         int dist;
         List<String> s = new ArrayList<String>();
         List<String> t = new ArrayList<String>();
@@ -223,10 +225,14 @@ public class ArabicASRChallenge {
             String traFileName = asr.parseASRFiles(args);
 
             // Sameer
-            String newTraFilePath = System.getProperty("user.dir") + "\\ALL_MOD.tra";
+            String mgbFolder = String.format("%s%s\\%s\\", args[0], args[1], args[10]);
+
+            //String newTraFilePath = System.getProperty("user.dir") + "\\ALL_MOD.tra";
+            String newTraFilePath = String.format("%s%s\\%s\\\\ALL_MOD.tra", args[0], args[1], args[6]);
             MGBUtil.fixTraSpeakers(traFileName, newTraFilePath);
+
             Class.forName("mgbmain.GenerateXMLTranscription");
-            GenerateXMLTranscription.createTranscript(newTraFilePath);
+            GenerateXMLTranscription.createTranscript(newTraFilePath, mgbFolder);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -974,8 +980,8 @@ public class ArabicASRChallenge {
     }
 
     public String parseASRFiles(String[] args) {
-        if (args.length != 10) {
-            System.out.println("Please enter orgFoldername subFoldername AjExt ctmExt alignExt srtExt traExt dfxpExt cleanExt trsExt. Ex: \"D:\\Speech\\ArabicASRChallenge\\exp-2015-10-25\\ html xml ctm align srt tra dfxp clean trs");
+        if (args.length != 11) {
+            System.out.println("Please enter orgFoldername subFoldername AjExt ctmExt alignExt srtExt traExt dfxpExt cleanExt trsExt mgbFolder. Ex: \"D:\\Speech\\ArabicASRChallenge\\exp-2015-10-25\\ html xml ctm align srt tra dfxp clean trs mgb");
             return "fail";
         }
 

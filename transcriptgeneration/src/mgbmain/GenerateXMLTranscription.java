@@ -58,7 +58,7 @@ public class GenerateXMLTranscription {
 
 	}
 
-	public static void createTranscript(String textTranscriptFilePath)
+	public static void createTranscript(String textTranscriptFilePath, String mgbFolder)
 			throws IllegalArgumentException, IllegalAccessException {
 		BufferedReader br = null;
 		String currentSegment;
@@ -85,7 +85,7 @@ public class GenerateXMLTranscription {
 
 		speakersMap = MGBUtil.populateSpeakersMap(segmentMap);
 
-		MGBUtil.generateXML(segmentMap, speakersMap, programInfoMap, "D:\\Speech\\ArabicASRChallenge\\ArabicASRChallenge\\"); // /Users/alt-sameerk/Documents/tra_xml/xml_hamdy/");
+		MGBUtil.generateXML(segmentMap, speakersMap, programInfoMap, mgbFolder); // /Users/alt-sameerk/Documents/tra_xml/xml_hamdy/"); "D:\\Speech\\ArabicASRChallenge\\ArabicASRChallenge\\"
 	}
 
 	private static void populateSegmentMap(SegmentBean segmentBean) {

@@ -57,7 +57,7 @@ public class MGBUtil {
                         while ((currentLine = reader.readLine()) != null) {
 				programBean = new ProgramBean();
 				String[] splittedTDF = currentLine.split("\t");
-				programBean.setTitle(splittedTDF[4]);
+				programBean.setTitle(ArabicUtils.utf82buck(splittedTDF[4]));
 				programBean.setName(splittedTDF[3]);
 				programBean.setDate(getDate(splittedTDF[5]));
 				programInfoMap.put(splittedTDF[2].replaceAll("-", "_"), programBean);
