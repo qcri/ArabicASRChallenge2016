@@ -50,5 +50,15 @@ sh download.sh <your_username> <your_password> lm|lm.orig|lm.processed <your_loc
 *lm.orig* has the textual training data in UTF-8 encoding as on Al-Jazeera website. No normalization has been done.
 *lm.processed* has the normalized textual training data in buckwalter with non-Arabic characters removed.
 
+### Manual Transcription Guidelines
 
+* split on silence according to the shape of the wave
+* segment duration should be more than 3 sec.
+* verbatim transcription
+* mark hesitation and repetition with # (like: today is# is )
+* mark segments with overlap speech by "###" in the beginning
+
+### Scoring Scripts
+
+For scoring, SCLite will be used. We are happy to open source GLM file to be used in evaluation go. For any issue you want to raise or share with others, please find issue page on [github](https://github.com/Qatar-Computing-Research-Institute/ArabicASRChallenge2016/issues) to contribute.
 
