@@ -1,0 +1,5 @@
+%WER 64.20 [ 22254 / 34663, 1293 ins, 9557 del, 11404 sub ] exp/mer100/tri1/decode/wer_15
+%WER 63.19 [ 21903 / 34663, 1534 ins, 8944 del, 11425 sub ] exp/mer100/tri2/decode/wer_14
+%WER 59.69 [ 20692 / 34663, 1409 ins, 9090 del, 10193 sub ] exp/mer100/tri4/decode.si/wer_14
+%WER 59.02 [ 20458 / 34663, 1446 ins, 8665 del, 10347 sub ] exp/mer100/tri3/decode/wer_15
+%WER 55.63 [ 19284 / 34663, 1576 ins, 7910 del, 9798 sub ] exp/mer100/tri4/decode/wer_16

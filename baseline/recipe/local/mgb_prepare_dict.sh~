@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -e
+
+# Dictionary preparation for MGB Challenge 2015 (Peter Bell, University of Edinburgh)
+
+
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 <src-lex-dir>"
+  exit 1;
+fi
+
+lexdir=$1
+
+dir=data/local/dict
+
+mkdir -p $dir
+
+# Create the lexicon.txt file
+
+(
+echo -e "!SIL\tsil\n<unk>\tspn"
+cat $lexdir/crpx.dct | sort
+) > $dir/lexicon.txt
+
+echo -e "sil\nspn" > $dir/silence_phones.txt
+#cat $lexdir/crpx_phonelist.txt | egrep -v "(sil|sp|spn)" > $dir/nonsilence_phones.txt
+echo sil > $dir/optional_silence.txt
+echo "sil spn" > $dir/extra_questions.txt
+
+utils/validate_dict_dir.pl $dir
