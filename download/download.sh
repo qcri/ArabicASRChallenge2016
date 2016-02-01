@@ -21,9 +21,10 @@ ext=$5    # File extension (wav, xml, ...)
 while read v; do
    # For each file in the file list
    echo $v
+   BASE=$(basename $v)
    # Destination file
-   F=$folder/$v.$ext
-   T=$folder/.$v.$ext
+   F=$folder/$BASE.$ext
+   T=$folder/.$BASE.$ext
    if [ ! -e "$F" ]; then
      # if file has not been downloaded yet
      rm -f $T
