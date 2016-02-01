@@ -9,8 +9,12 @@
 # destination_dir is the place on your local machine where you want
 # the files to go; extension is 'wav'
 
-# Example: sh download.sh user pass dev.short myLocalDir wav
+# Example: sh download.sh user pass dev myLocalDir wav
 
+if [ $# -ne 5 ]; then
+  head -n 13 $0 | tail -n 12 | sed 's:^#::'
+  exit 1
+fi
 
 user=$1   # Username
 pass=$2   # Password
@@ -32,11 +36,3 @@ while read v; do
      wget -O $T ftp://${user}:${pass}@mgb-arabic.cloudapp.net/data/$ext/$v.$ext && mv $T $F
    fi
 done < $file
-
-# if we've downloaded wavs, download a checksum file too
-if [ "$ext" == "wav" ]; then
-  set=$(basename "$file")
-  F=$folder/$set\_checksums.txt
-  T=$folder/.$set\_checksums.txt
-  wget -O $T http://${user}:${pass}@data.cstr.ed.ac.uk/asru/data/checksums/$set\_checksums.txt && mv $T $F
-fi
