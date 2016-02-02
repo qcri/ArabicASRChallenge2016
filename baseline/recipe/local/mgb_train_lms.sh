@@ -17,10 +17,6 @@ fi
 
 # This script takes no arguments.  It assumes you have already run
 # previus steps successfully
-# It takes as input the files
-#data/local/train.*/text
-#data/local/dict/lexicon.txt
-
 
 export LC_ALL=C # You'll get errors about things being not sorted, if you
 # have a different locale.
@@ -65,7 +61,6 @@ dir=data/local/lm
    cat - <(grep -w -v '!SIL' $lexicon | awk '{print $1}') | \
     sort | uniq -c | sort -nr > $dir/unigram.counts || exit 1;
 
-# note: we probably won't really make use of <UNK> as there aren't any OOVs
  cat $dir/unigram.counts  | awk '{print $2}' | get_word_map.pl "<s>" "</s>" "<UNK>" > $dir/word_map \
     || exit 1;
 
@@ -75,8 +70,6 @@ dir=data/local/lm
     || exit 1;
  
  train_lm.sh --arpa --lmtype 3gram-mincount $dir || exit 1;
-
- prune_lm.sh 4.0 $dir/3gram-mincount/
 
 # note: output is
 # data/local/lm/3gram-mincount/lm_unpruned.gz 
