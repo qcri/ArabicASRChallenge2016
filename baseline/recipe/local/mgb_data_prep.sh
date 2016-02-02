@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Training data prepartion for MGB Challenge 2015 (Peter Bell, University of Edinburgh)
-
 set -e
 
 if [ $# -ne 3 ]; then
@@ -14,7 +12,7 @@ xmldir=$2
 mer=$3
 
 dir=data/train_mer$mer
-#Sameer: Added
+
 dirtest=data/test_mer$mer
 mkdir -p $dir
 mkdir -p $dirtest
@@ -27,21 +25,20 @@ cat train.full | while read basename; do
     echo $basename $wavdir/$basename.wav >> $dir/wav.scp
 done
 
-#Sameer: Added to create a test directory
-cat test.full | while read basename; do
+cat dev.full | while read basename; do
     [ ! -e $xmldir/$basename.xml ] && echo "Missing $xmldir/$basename.xml" && exit 1
     $XMLSTARLET/xmlstarlet sel -t -m '//segments[@annotation_id="transcript_align"]' -m "segment" -n -v  "concat(@who,' ',@starttime,' ',@endtime,' ',@WMER,' ')" -m "element" -v "concat(text(),' ')" $xmldir/$basename.xml | local/add_to_datadir.py $basename $dirtest $mer
     echo $basename $wavdir/$basename.wav >> $dirtest/wav.scp
 done
 
 sort -k 2 $dir/utt2spk | utils/utt2spk_to_spk2utt.pl > $dir/spk2utt
-#Sameer: Added for test directory
+
 sort -k 2 $dirtest/utt2spk | utils/utt2spk_to_spk2utt.pl > $dirtest/spk2utt
 
 utils/fix_data_dir.sh $dir
 utils/validate_data_dir.sh --no-feats $dir
 
-#Sameer: Added for test
+
 utils/fix_data_dir.sh $dirtest
 utils/validate_data_dir.sh --no-feats $dirtest
 

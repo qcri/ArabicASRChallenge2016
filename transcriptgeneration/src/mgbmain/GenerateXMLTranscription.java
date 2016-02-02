@@ -54,17 +54,19 @@ public class GenerateXMLTranscription {
 	static {
 		segmentMap = ArrayListMultimap.create();
 		speakersMap = ArrayListMultimap.create();
-		programInfoMap = MGBUtil.getALJProgramInformation("D:\\Speech\\ArabicASRChallenge\\exp-2015-11-10\\aja_tdf.txt"); // "/Users/alt-sameerk/Downloads/aja_tdf");
-
+		//programInfoMap = MGBUtil.getALJProgramInformation("D:\\Speech\\ArabicASRChallenge\\exp-2015-11-10\\aja_tdf.txt"); // "/Users/alt-sameerk/Downloads/aja_tdf");
 	}
 
-	public static void createTranscript(String textTranscriptFilePath, String mgbFolder)
+	public static void createTranscript(String textTranscriptFilePath, String parentDir, String mgbFolder)
 			throws IllegalArgumentException, IllegalAccessException {
 		BufferedReader br = null;
 		String currentSegment;
 		try {
+                    String ajaFilename;
+                    ajaFilename  =String.format("%s\\aja_tdf.txt", parentDir);
+                    programInfoMap = MGBUtil.getALJProgramInformation(ajaFilename); // "/Users/alt-sameerk/Downloads/aja_tdf");
 
-			br = new BufferedReader(new FileReader(textTranscriptFilePath));
+                        br = new BufferedReader(new FileReader(textTranscriptFilePath));
 			while ((currentSegment = br.readLine()) != null) {
 
 				SegmentBean segmentBean = new SegmentBean();
