@@ -20,6 +20,11 @@ import org.xml.sax.SAXParseException;
 import mgbutils.ArabicUtils;
 import mgbutils.MGBUtil;
 
+/**
+ * 
+ * @author Sameer Khurana (skhurana@qf.org.qa)
+ *
+ */
 public class ExtractLMText {
 
 	public static void main(String[] args) {
@@ -45,9 +50,7 @@ public class ExtractLMText {
 					continue;
 				}
 				doc.getDocumentElement().normalize();
-				// System.out.println("Root element :" +
-				// doc.getDocumentElement().getNodeName());
-				int c = 0;
+
 				NodeList nList1 = doc.getElementsByTagName("doc");
 				BufferedWriter bw = null;
 				for (int j = 0; j < nList1.getLength(); j++) {
@@ -72,15 +75,10 @@ public class ExtractLMText {
 
 					}
 
-					// break;
 				}
 			}
 
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 

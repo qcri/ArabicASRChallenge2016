@@ -5,20 +5,24 @@
  */
 package mgbmain;
 
-import java.io.*;
-import java.util.*;
-import java.nio.file.Files;
-import java.util.zip.GZIPInputStream;
-import javax.swing.JOptionPane;
-import mgbmain.GenerateXMLTranscription;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import org.jsoup.parser.Parser;
 
 import mgbutils.ArabicUtils;
+import mgbutils.GenerateXMLTranscription;
 import mgbutils.MGBUtil;
 import mgbutils.WordSequenceAligner;
 import mgbutils.WordSequenceAligner.Alignment;
