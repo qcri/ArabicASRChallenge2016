@@ -5,26 +5,24 @@
  */
 package mgbmain;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.io.*;
+import java.util.*;
+import java.nio.file.Files;
+import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+import javax.swing.JOptionPane;
+import mgbmain.GenerateXMLTranscription;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.jsoup.parser.Parser;
 
 import mgbutils.ArabicUtils;
-import mgbutils.GenerateXMLTranscription;
 import mgbutils.MGBUtil;
 import mgbutils.WordSequenceAligner;
+import java.util.regex.*;
 import mgbutils.WordSequenceAligner.Alignment;
 
 /**
@@ -53,7 +51,7 @@ public class ArabicASRChallenge {
     final boolean SAVE_DEBUG_INFO = true;
     final boolean CONSIDER_MP4_FILES_ONLY = false;//true;
     final boolean USE_REVISED_SPEAKERS = true;
-    final int MAX_NOF_FILES = -1;//100;//-1;//100;
+    final int MAX_NOF_FILES = -1;//100;
     final float MIN_FILE_DURATION = 20.0f;
     final boolean USE_COLORS = false;
     final boolean GRAPHEME_ALIGN_FILES = true;
@@ -188,8 +186,8 @@ public class ArabicASRChallenge {
 
         ArabicASRChallenge asr = new ArabicASRChallenge();
 
-        // arge: "D:\\Speech\\ArabicASRChallenge\\exp-2015-10-25\\" "html" "xml" "ctm" "align" "srt" "tra" "dfxp" "clean" "trs" "mgb"
-        //args[0] = "D:\\Speech\\ArabicASRChallenge\\exp-2015-11-10\\" // Folder name
+        // arge: "D:\\Speech\\ArabicASRChallenge\\exp-2015-10-25" "html" "xml" "ctm" "align" "srt" "tra" "dfxp" "clean" "trs" "mgb"
+        //args[0] = "D:\\Speech\\ArabicASRChallenge\\exp-2015-11-10" // Folder name
         //args[1] = "html"; //sunfolder name
         //args[2] = "xml"; //Extension of Aljazeera transcription
         //args[3] = "ctm"; // Extension of .ctm file
@@ -200,7 +198,6 @@ public class ArabicASRChallenge {
         //args[8] = "clean; // Extension of .clean file
         //args[9] = "trs; // Extension of .trs file
         //args[10] = "mgb; // Extension of .xml file
-        
         int dist;
         List<String> s = new ArrayList<String>();
         List<String> t = new ArrayList<String>();
@@ -226,18 +223,28 @@ public class ArabicASRChallenge {
                 asr.generateNoStopList(args);
             }
 
-            String traFileName = asr.parseASRFiles(args);
+            boolean generateAllFiles = false;
+            if (generateAllFiles) {
+                String traFileName = asr.parseASRFiles(args);
+                
+                // Sameer
+                String mgbFolder = String.format("%s\\%s\\%s\\", args[0], args[1], args[10]);
 
-            // Sameer
-            String mgbFolder = String.format("%s%s\\%s\\", args[0], args[1], args[10]);
+                //String newTraFilePath = System.getProperty("user.dir") + "\\ALL_MOD.tra";
+                String newTraFilePath = String.format("%s\\%s\\%s\\\\ALL_MOD.tra", args[0], args[1], args[6]);
+                MGBUtil.fixTraSpeakers(traFileName, newTraFilePath);
 
-            //String newTraFilePath = System.getProperty("user.dir") + "\\ALL_MOD.tra";
-            String newTraFilePath = String.format("%s%s\\%s\\\\ALL_MOD.tra", args[0], args[1], args[6]);
-            MGBUtil.fixTraSpeakers(traFileName, newTraFilePath);
+                Class.forName("mgbmain.GenerateXMLTranscription");
+                GenerateXMLTranscription.createTranscript(newTraFilePath, args[0], mgbFolder);
+            }
 
-            Class.forName("mgbmain.GenerateXMLTranscription");
-            GenerateXMLTranscription.createTranscript(newTraFilePath, mgbFolder);
+            asr.extractAjGenre(args);
 
+            asr.genDfxpFromGeneratedFiles(args);            
+            
+            // Extract information from the generated .tra file
+            asr.parseGeneratedFiles(args);
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -472,7 +479,7 @@ public class ArabicASRChallenge {
         return nofLines;
     }
 
-    public String cleanText(String text) {
+    public String cleanWord(String text) {
         int i, c, charType, breakpoint;
         String s;
         char[] charInput = text.toCharArray();
@@ -522,6 +529,24 @@ public class ArabicASRChallenge {
         return s;
     }
 
+    public String cleanText(String text) {
+        int i, nofWords;
+        String out;
+        ArrayList<String> words = new ArrayList<String>();
+
+        words = ArabicUtils.tokenize(text);
+        nofWords = words.size();
+
+        out = "";
+        for (i = 0; i < nofWords; i++) {
+            out += String.format("%s ", words.get(i));
+        }
+
+        out = out.trim();
+
+        return out;
+    }
+
     public static String normalizeWord(String t) {
         String s;
 
@@ -562,6 +587,17 @@ public class ArabicASRChallenge {
          }
          }*/
         out = s;
+
+        /*String pattern = "[،؟:/!,؛\"]";
+         Pattern p = Pattern.compile(pattern);
+         Matcher m = p.matcher(out);
+         if(m.find()){
+         System.out.print(m.group(0));
+         //System.out.print(m.group(2));
+            
+         }
+         //out = out.replaceAll("[،؟:/!,؛\"]", "");
+         // return out;*/
         out = out.replaceAll(":", " : ");
         out = out.replaceAll("\\[", " \\[ ");
         out = out.replaceAll("\\]", " \\] ");
@@ -577,6 +613,14 @@ public class ArabicASRChallenge {
         out = out.replaceAll("\\{", " \\{ ");
         out = out.replaceAll("}", " } ");
 
+        // New
+        //out = out.replaceAll("\\*", " \\* ");
+        //out = out.replaceAll("؛", " ؛ ");
+        //out = out.replaceAll("!", " $0 ");
+        //out = out.replaceAll("،", " -،- ");
+        //out = out.replaceAll("%", " % ");
+        //out = out.replaceAll("\\\"", " \" ");
+        //out = out.replaceAll("\\\\", "\\s \\\\\ \\s ");*/
         if (out.indexOf("\\\\") > 0) {
             out = out.replaceAll("\\\\", " \\\\ ");
         }
@@ -995,7 +1039,7 @@ public class ArabicASRChallenge {
         float fileDuration, totalDuration;
         String orgFolderName, subFolderName, ajFolderName, ctmFolderName, alignFolderName, srtFolderName, trsFolderName, msg, s, dbgFilename, mp4Filename;
         String ajExt, ctmExt, alignExt, srtExt, traExt, dfxpExt, cleanExt, trsExt;
-        String ajFilename, ctmFilename, alignFilename, srtFilename, cleanFilename, cleanFilename2, trsFilename, traFolderName, dfxpFolderName, cleanFolderName, filename, outFilename, ext, filenameNoExt, traFilename = null, speakersFilename, statusFilename, sFileDuration, normalizedSpeaker;
+        String ajFilename, ctmFilename, alignFilename, srtFilename, cleanFilename, cleanFilename2, trsFilename, traFolderName, dfxpFilename, dfxpFolderName, cleanFolderName, filename, outFilename, ext, filenameNoExt, traFilename = null, speakersFilename, statusFilename, sFileDuration, normalizedSpeaker;
         String[] fields;
         File[] ajFiles, srtFiles;
         Set<String> speakersKeys;
@@ -1015,7 +1059,7 @@ public class ArabicASRChallenge {
         List<String> srtLines = new ArrayList<String>();
         List<String> allSrtLines = new ArrayList<String>();
         HashMap<String, SpeakerInfo> speakersMap = new HashMap<String, SpeakerInfo>();
-        BufferedWriter outAlign, outSrt, outTra, outClean, outClean2, outTrs, outSpeakers, outStatus;
+        BufferedWriter outAlign, outSrt, outTra, outClean, outClean2, outTrs, outDfxp, outSpeakers, outStatus;
 
         msg = String.format("parseASRFiles(), start");
         System.out.println(msg);
@@ -1109,7 +1153,8 @@ public class ArabicASRChallenge {
             //dbgFilename = "F80DC210-92E2-4B3A-80C6-89ECB738B375.xml";
             //dbgFilename = "0EC62179-AC40-438B-94FB-51E1D92E8677.xml";
             //dbgFilename = "017E8618-8B64-4FA0-9251-5907DA6F6078.xml";
-            dbgFilename = "01E4B05D-E8C2-4F92-819F-140B607ABA50.xml";
+            //dbgFilename = "01E4B05D-E8C2-4F92-819F-140B607ABA50.xml";
+            dbgFilename = "0A527559-B216-499A-B5CC-1EEEB8F6E2C0.xml";
             for (File file : ajFiles) {
                 if (fileIndex == MAX_NOF_FILES) {
                     break;
@@ -1241,9 +1286,20 @@ public class ArabicASRChallenge {
 
                                     outTrs.write(msg);
 
-                                    asrLines2 = extractAsrInfo(asrLines, outSrt, outTrs);
+                                    // dfxp
+                                    dfxpFilename = String.format("%s\\%s.%s", trsFolderName, filenameNoExt, dfxpExt);
+                                    outDfxp = new BufferedWriter(new FileWriter(dfxpFilename));
 
-                                    alignAljazeeraWithAsr(ajLines2, asrLines2, outAlign, outSrt, outTrs, filename, outTra, outStatus, speakersMap);
+                                    // Header of .dfxp file
+                                    msg = String.format("<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n");
+                                    msg += String.format("<tt xml:lang=\"en\" xmlns=\"http://www.w3.org/ns/ttml\" xmlns:tts=\"http://www.w3.org/ns/ttml#styling\">\r\n");
+                                    msg += String.format(" <head>\r\n  <styling/>\r\n </head>\r\n <body>\r\n  <div xml:lang=\"ar-ar\">\r\n");
+
+                                    outDfxp.write(msg);
+
+                                    asrLines2 = extractAsrInfo(asrLines, outSrt, outTrs, outDfxp);
+
+                                    alignAljazeeraWithAsr(ajLines2, asrLines2, outAlign, outSrt, outTrs, filename, outTra, outStatus, speakersMap, outDfxp);
 
                                     outClean2.close();
                                     outAlign.close();
@@ -1251,8 +1307,13 @@ public class ArabicASRChallenge {
                                     msg = "</Turn>\r\n</Section>\r\n</Episode>\r\n</Trans>\r\n";
                                     outTrs.write(msg);
 
+                                    msg = "  </div>\r\n </body>\r\n</tt>\r\n";
+                                    outDfxp.write(msg);
+
                                     outSrt.close();
                                     outTrs.close();
+
+                                    outDfxp.close();
 
                                     ajXmlLines.clear();
                                     ajLines2.clear();
@@ -1726,7 +1787,7 @@ public class ArabicASRChallenge {
         return ajLines2;
     }
 
-    public List<String> extractAsrInfo(List<String> asrLines, BufferedWriter outSrt, BufferedWriter outTrs) {
+    public List<String> extractAsrInfo(List<String> asrLines, BufferedWriter outSrt, BufferedWriter outTrs, BufferedWriter outDfxp) {
         int i, j, n, nofWords;
         char ch;
         boolean breakpoint;
@@ -1858,6 +1919,7 @@ public class ArabicASRChallenge {
         boolean punct;
         int len, len2, i;
         char ch, ch2;
+        //String arabicPunct = "؟.،؛";
         String arabicPunct = "؟.،";
 
         punct = false;
@@ -2043,7 +2105,7 @@ public class ArabicASRChallenge {
 
             wordInfo.word = fields2[2];
             wordInfo.wordLen = wordInfo.word.length();
-            wordInfo.cleanWord = cleanText(wordInfo.word);
+            wordInfo.cleanWord = cleanWord(wordInfo.word);
 
             wordInfo.startTime = Float.parseFloat(fields2[0]);
             wordInfo.duration = Float.parseFloat(fields2[1]);
@@ -2149,7 +2211,7 @@ public class ArabicASRChallenge {
                 }
 
                 wordInfo.wordLen = wordInfo.word.length();
-                wordInfo.cleanWord = cleanText(wordInfo.word);
+                wordInfo.cleanWord = cleanWord(wordInfo.word);
 
                 wordInfo.speaker = speaker;
                 wordInfo.matchLevel = ML_NO_MATCH;
@@ -2292,7 +2354,7 @@ public class ArabicASRChallenge {
         return n;
     }
 
-    public int alignAljazeeraWithAsr(List<String> ajLines2, List<String> asrLines2, BufferedWriter outAlign, BufferedWriter outSrt, BufferedWriter outTrs, String ajFilename, BufferedWriter outTra, BufferedWriter outStatus, HashMap<String, SpeakerInfo> speakersMap) {
+    public int alignAljazeeraWithAsr(List<String> ajLines2, List<String> asrLines2, BufferedWriter outAlign, BufferedWriter outSrt, BufferedWriter outTrs, String ajFilename, BufferedWriter outTra, BufferedWriter outStatus, HashMap<String, SpeakerInfo> speakersMap, BufferedWriter outDfxp) {
         boolean punct;
         int ajNofLines, asrNofLines, i, j, k, n, m, nofWords, nofWordsAj, nofWordsAj2, nofWordsAsr, nofWordsAsr0, nofWordsAsr2, nofWordsAsr3, start, start1, end1, start2, end2, srtIndex, breakpoint, punctIndex, maxWindowIndex, minWindowIndex, nofSegments;
         float startTime, endTime, startTime0, endTime0, startTime2, endTime2, startTime3, endTime3, duration, duration3;
@@ -2320,7 +2382,7 @@ public class ArabicASRChallenge {
             nofSegments = getAlignSegments(outAjList, outAsrList, alignSegments);
             n = saveAjAsrAlign(ajFilename, outAjList, outAsrList, outAlign, outStatus, alignSegments);
 
-            genSrtOutput(outAjList, outAsrList, alignSegments, outSrt, outTrs, ajFilename, outTra, outStatus, speakersMap);
+            genSrtOutput(outAjList, outAsrList, alignSegments, outSrt, outTrs, ajFilename, outTra, outStatus, speakersMap, outDfxp);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -2963,7 +3025,7 @@ public class ArabicASRChallenge {
         return match;
     }
 
-    public int genSrtOutput(List<AjAsrWordInfo> outAjList, List<AjAsrWordInfo> outAsrList, List<AlignSegment> alignSegments, BufferedWriter outSrt, BufferedWriter outTrs, String ajFilename, BufferedWriter outTra, BufferedWriter outStatus, HashMap<String, SpeakerInfo> speakersMap) {
+    public int genSrtOutput(List<AjAsrWordInfo> outAjList, List<AjAsrWordInfo> outAsrList, List<AlignSegment> alignSegments, BufferedWriter outSrt, BufferedWriter outTrs, String ajFilename, BufferedWriter outTra, BufferedWriter outStatus, HashMap<String, SpeakerInfo> speakersMap, BufferedWriter outDfxp) {
         int i, j, k, c, nofSegments, lastUsedColorIndex, nofColors, segmentLen, segmentLineLen, startTimeIndex, endTimeIndex;
         float startTime, endTime, segmentDuration;
         String s2, s3, sAj, sAsr, speaker, lastSpeaker, buckwalterSpeaker, sStartTime, sEndTime, sStartTime2, sEndTime2, msg, allSrt, allTrs, allTra, allStatus, color, color2, normAj, normAsr;
@@ -3245,7 +3307,7 @@ public class ArabicASRChallenge {
                             ajFilename, buckwalterSpeaker, sStartTime, sEndTime, sAj, alignSegment.nofSegWords,
                             alignSegment.correctSegWords,
                             (alignSegment.correctSegWords * 100) / alignSegment.nofSegWords, alignSegment.nofIns,
-                            alignSegment.nofDel, MGBUtil.round(leveDistWordLevel * 100.0,2), MGBUtil.round(leveDistanceCharLevel * 100,2),
+                            alignSegment.nofDel, MGBUtil.round(leveDistWordLevel * 100.0, 2), MGBUtil.round(leveDistanceCharLevel * 100, 2),
                             MGBUtil.calculateAWD(sStartTime, sEndTime, alignSegment.nofSegWords),
                             alignSegment.asrStartTimeExists, alignSegment.asrEndTimeExists);
                 } else {
@@ -3334,6 +3396,273 @@ public class ArabicASRChallenge {
                 fileIndex++;
             }
         }
+
+        return 1;
+    }
+
+    public int parseGeneratedFiles(String[] args) {
+        boolean Arabic, breakpoint;
+        int i, j, nofAllTraLines, spaceIndex, tabIndex, errors, nofWords, nonArabicWords, totalNofWords, skipped;
+        String msg, orgFolderName, subFolderName, traExt, traFolderName, traFilename, outFilename, line, segmentText, out, word;
+        List<String> ALL_TRA = new ArrayList<String>();
+        String[] words;
+        BufferedWriter outFile;
+
+        // Replace ALL in All.tra: \" -> ", % ->
+        msg = String.format("parseGeneratedFiles(), start");
+        System.out.println(msg);
+
+        nonArabicWords = 0;
+        totalNofWords = 0;
+
+        try {
+            orgFolderName = args[0];
+            subFolderName = args[1];
+            traExt = args[6];
+
+            traFolderName = String.format("%s\\%s\\%s", orgFolderName, subFolderName, traExt);
+
+            traFilename = String.format("%s\\ALL.%s", traFolderName, traExt);
+            nofAllTraLines = LoadFile(traFilename, ALL_TRA);
+
+            outFilename = String.format("%s\\ALL.%s.rep", traFolderName, traExt);
+            outFile = new BufferedWriter(new FileWriter(outFilename));
+
+            errors = 0;
+            skipped = 0;
+            out = "";
+            for (i = 0; i < nofAllTraLines; i++) {
+                line = ALL_TRA.get(i);
+
+                spaceIndex = line.indexOf(" ");
+                tabIndex = line.indexOf("\t");
+
+                if ((spaceIndex < 0) || (tabIndex < 0)) {
+                    errors++;
+                    continue;
+                }
+
+                segmentText = line.substring(spaceIndex + 1, tabIndex);
+                //segmentText = "الBBC، الـCNN.com  بنسبة 25.10% سنويًا";
+                //segmentText = "ال12.";
+                segmentText = cleanText(segmentText);
+
+                words = segmentText.split(" ");
+                nofWords = words.length;
+                totalNofWords += nofWords;
+                for (j = 0; j < nofWords; j++) {
+                    if (words[j].equals("ﺎ") || words[j].equals("ٱ") || words[j].equals("ﺠ") || words[j].equals("ۖ") || words[j].equals("ﻌ")) {
+                        breakpoint = true;
+                    }
+                    if (isPunct(words[j])) {
+                        continue;
+                    }
+
+                    word = ArabicUtils.removeDiacritics(words[j]);
+                    word = word.replaceAll("ـ", ""); // kashida
+
+                    Arabic = false;
+                    if (word.matches("[ء-ي]+")) {
+                        Arabic = true;
+                    }
+
+                    if (!Arabic) {
+                        /*if (word.equals("..") || word.equals("...") || word.equals("...."))
+                         {
+                         skipped++;
+                         }
+                         else if (word.isEmpty())
+                         {
+                         skipped++;
+                         }
+                         else*/
+                        {
+                            nonArabicWords++;
+                            out = String.format("%s\r\n", words[j]);
+                            outFile.write(out);
+                        }
+                    }
+                }
+            }
+
+            outFile.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        msg = String.format("parseGeneratedFiles(), end. nonArabicWords=%d, totalNofWords=%d", nonArabicWords, totalNofWords);
+        System.out.println(msg);
+
+        return 1;
+    }
+
+    public int genDfxpFromGeneratedFiles(String[] args) {
+        final String TIME_DELIM = " --> ";
+        boolean time;
+        int fileIndex, nofFiles, extIndex, i, nofSrtLines, index;
+        String orgFolderName, subFolderName, srtFilename, srtExt, dfxpExt, srtFolderName, msg, filename, filenameNoExt, ext, dfxpFilename, dfxpFolderName, s, line, startTime, endTime, segmentText;
+        BufferedWriter outDfxpFile;
+        File[] srtFiles;
+        List<String> srtLines = new ArrayList<String>();
+
+        msg = String.format("genDfxpFromGeneratedFiles(), start");
+        System.out.println(msg);
+
+        try {
+            orgFolderName = args[0];
+            subFolderName = args[1];
+            srtExt = args[5];
+            dfxpExt = args[7];
+
+            srtFolderName = String.format("%s\\%s\\%s", orgFolderName, subFolderName, srtExt);
+            srtFiles = new File(srtFolderName).listFiles();
+
+            fileIndex = 0;
+            nofFiles = srtFiles.length;
+
+            for (File file : srtFiles) {
+                if (file.isFile()) {
+                    filename = file.getName();
+
+                    extIndex = filename.lastIndexOf('.');
+                    if (extIndex > 0) {
+                        filenameNoExt = filename.substring(0, extIndex);
+                        ext = filename.substring(extIndex + 1);
+
+                        if (ext.compareToIgnoreCase(srtExt) == 0) {
+                            dfxpFolderName = String.format("%s\\%s\\%s", orgFolderName, subFolderName, dfxpExt);
+                            dfxpFilename = String.format("%s\\%s.%s", dfxpFolderName, filenameNoExt, dfxpExt);
+                            outDfxpFile = new BufferedWriter(new FileWriter(dfxpFilename));
+
+                            s = String.format("<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n");
+                            s += String.format("<tt xml:lang=\"en\" xmlns=\"http://www.w3.org/ns/ttml\" xmlns:tts=\"http://www.w3.org/ns/ttml#styling\">\r\n");
+                            s += String.format(" <head>\r\n  <styling/>\r\n </head>\r\n <body>\r\n  <div xml:lang=\"ar-ar\">\r\n");
+
+                            outDfxpFile.write(s);
+
+                            srtFilename = String.format("%s\\%s", srtFolderName, filename);
+                            nofSrtLines = LoadFile(srtFilename, srtLines);
+
+                            startTime = "";
+                            endTime = "";
+                            time = false;
+                            for (i = 0; i < nofSrtLines; i++) {
+                                line = srtLines.get(i);
+
+                                index = line.indexOf(TIME_DELIM);
+                                if (index > 0)
+                                {
+                                    startTime = line.substring(0, index);
+                                    endTime = line.substring(index + TIME_DELIM.length());
+
+                                    startTime = startTime.replaceAll(",", ".");
+                                    endTime = endTime.replaceAll(",", ".");
+                                    time = true;
+                                }
+                                else if (time)
+                                {
+                                    segmentText = line;
+
+                                    s = String.format("   <p begin=\"%s\" end=\"%s\">\r\n    %s\r\n   </p>\r\n", startTime, endTime, segmentText);
+                                    outDfxpFile.write(s);
+
+                                    time = false;
+                                }
+                            }
+
+                            s = "  </div>\r\n </body>\r\n</tt>\r\n";
+                            outDfxpFile.write(s);
+
+                            outDfxpFile.close();
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        msg = String.format("genDfxpFromGeneratedFiles(), end");
+        System.out.println(msg);
+
+        return 1;
+    }
+
+    public int extractAjGenre(String[] args) {
+        boolean time, breakpoint;
+        int fileIndex, nofFiles, extIndex, i, nofAjLines, index, nofKeywords;
+        String orgFolderName, subFolderName, ajFilename, ajExt, ajFolderName, msg, filename, filenameNoExt, ext, outFilename, s, line, startTime, endTime, segmentText, keywords;
+        BufferedWriter outFile;
+        File[] ajFiles;
+        Element element;
+        List<String> ajLines = new ArrayList<String>();
+
+        msg = String.format("extractAjGenre(), start");
+        System.out.println(msg);
+
+        nofKeywords = 0;
+        nofFiles = 0;
+
+        try {
+            orgFolderName = args[0];
+            subFolderName = args[1];
+            ajExt = args[2];
+
+            ajFolderName = String.format("%s\\%s\\%s", orgFolderName, subFolderName, ajExt);
+            ajFiles = new File(ajFolderName).listFiles();
+
+            nofKeywords = 0;
+            fileIndex = 0;
+            nofFiles = ajFiles.length;
+
+            outFilename = String.format("%s\\%s\\AjRep.txt", orgFolderName, subFolderName);
+            outFile = new BufferedWriter(new FileWriter(outFilename));
+
+            for (File file : ajFiles) {
+                if (file.isFile()) {
+                    filename = file.getName();
+
+                    extIndex = filename.lastIndexOf('.');
+                    if (extIndex > 0) {
+                        filenameNoExt = filename.substring(0, extIndex);
+                        ext = filename.substring(extIndex + 1);
+
+                        if (ext.compareToIgnoreCase(ajExt) == 0) {
+                            
+                            ajFilename = String.format("%s\\%s\\%s\\%s", orgFolderName, subFolderName, ajExt, filename);
+                            //nofAjLines = LoadFile(ajFilename, ajLines);
+                           
+                            Document doc = Jsoup.parse(new File(ajFilename), "utf-8");
+
+                            element = doc.select("Keywords").first();                           
+                            if (element != null) {
+                                keywords = getCleanContent(element, false);
+                                
+                                if (!keywords.isEmpty())
+                                {
+                                    nofKeywords++;
+                                    
+                                    s = String.format("%s\t%s\r\n", filename, keywords);
+                                    outFile.write(s);
+                                }
+                                else
+                                {
+                                    breakpoint = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            outFile.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        msg = String.format("extractAjGenre(), end. nofKeywords:%d, nofFiles:%d", nofKeywords, nofFiles);
+        System.out.println(msg);
 
         return 1;
     }

@@ -225,8 +225,56 @@ public class ArabicUtils {
 
 		ArrayList<String> output = new ArrayList<String>();
 
-		String[] words = s.split(" ");
-		for (int i = 0; i < words.length; i++) {
+		// Hamdy: 2015-01-31. Handle cases where Arabic letters are followed by numbers or English letters, ex: ال22, وBBC
+                // FIXME: Not finished yet!
+                final int SPRT = 0;
+                final int ALTR = 1;
+                final int ELTR = 2;
+                final int NMBR = 3;
+                final int PUNC = 4;
+                int i, len, charType, lastCharType;
+                String s2;
+                char ch;
+                len = s.length();
+                lastCharType = SPRT;
+                s2 = "";
+                for (i = 0; i < len; i++)
+                {
+                    ch = s.charAt(i);
+                    charType = SPRT;
+                    if ((ch >= 'ء') && (ch <= 'ي'))
+                    {
+                        if ((lastCharType == ELTR) || (lastCharType == NMBR))
+                        {
+                            s2 += " ";
+                        }
+                        charType = ALTR;
+                    }
+                    else if ((ch >= 'A') && (ch <= 'z'))
+                    {
+                        if (lastCharType == ALTR)
+                        {
+                            s2 += " ";
+                        }
+                        charType = ELTR;
+                    }
+                    else if ((ch >= '0') && (ch <= '9'))
+                    {
+                        if (lastCharType == ALTR)
+                        {
+                            s2 += " ";
+                        }
+                        charType = NMBR;
+                    }
+                    
+                    s2 += ch;
+                    lastCharType = charType;
+                }
+                
+                s = s2.trim();
+                
+                String[] words = s.split(" ");
+		for (i = 0; i < words.length; i++) {
 			if (words[i].startsWith("#") || words[i].startsWith("@") || words[i].startsWith(":")
 					|| words[i].startsWith(";") || words[i].startsWith("http://")
 					// ||

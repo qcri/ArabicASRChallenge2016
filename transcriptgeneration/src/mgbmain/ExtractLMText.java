@@ -20,17 +20,15 @@ import org.xml.sax.SAXParseException;
 import mgbutils.ArabicUtils;
 import mgbutils.MGBUtil;
 
-/**
- * 
- * @author Sameer Khurana (skhurana@qf.org.qa)
- *
- */
 public class ExtractLMText {
 
 	public static void main(String[] args) {
 
 		try {
-			File[] xmlFiles = new File("/Users/alt-sameerk/Documents/aj_net/ARTICLES").listFiles(new FileFilter() {
+                    String out, msg;
+                    int fileNo, errors;
+			//File[] xmlFiles = new File("/Users/alt-sameerk/Documents/aj_net/ARTICLES").listFiles(new FileFilter() {
+                        File[] xmlFiles = new File("D:\\PERL\\aljazeera.net_archive\\ARTICLES").listFiles(new FileFilter() {
 
 				@Override
 				public boolean accept(File pathname) {
@@ -38,7 +36,13 @@ public class ExtractLMText {
 				}
 			});
 
-			for (File fxmlFile : xmlFiles) {
+			fileNo = 0;
+                        errors = 0;
+                        for (File fxmlFile : xmlFiles) {
+                            
+                            fileNo++;
+                            msg = String.format("ExtractLMText() for file:%d, errors:%d", fileNo, errors);
+                            System.out.println(msg);
 
 				DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 				DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
@@ -47,10 +51,13 @@ public class ExtractLMText {
 					doc = dBuilder.parse(fxmlFile);
 				} catch (SAXParseException e) {
 					System.out.println("not a good document cannot be parsed");
+                                        errors++;
 					continue;
 				}
 				doc.getDocumentElement().normalize();
-
+				// System.out.println("Root element :" +
+				// doc.getDocumentElement().getNodeName());
+				int c = 0;
 				NodeList nList1 = doc.getElementsByTagName("doc");
 				BufferedWriter bw = null;
 				for (int j = 0; j < nList1.getLength(); j++) {
@@ -61,13 +68,14 @@ public class ExtractLMText {
 						Node nNode = nList.item(i);
 						if (nNode.getNodeType() == Node.ELEMENT_NODE) {
 							Element element = (Element) nNode;
-							if (element.getAttribute("name").equals("Content")) {
+							if (element.getAttribute("name").equals("Content") || element.getAttribute("name").equals("mitemMainTitle")) {
 								String content = MGBUtil.normalizeWord(element.getTextContent()
 										.replaceAll("[،؟:/!,؛\"]", "").replaceAll("[^0-9٠-٩]\\.[^0-9٠-٩]", "")
 										.replaceAll("[\\(\\)\\[\\]_]", "").replaceAll("\\s\\s^\n", " ")
 										.replaceAll("[-\\.$]", "").replaceAll("[A-Za-z]", "")
 										.replaceAll("(?m)^[\t]*\r?\n", ""));
-								bw.write(ArabicUtils.utf82buck(content.trim()));
+                                                                out = ArabicUtils.utf82buck(content.trim());
+								bw.write(out + "\n");
 								bw.close();
 
 							}
@@ -76,9 +84,14 @@ public class ExtractLMText {
 					}
 
 				}
+                                //break;
 			}
 
-		} catch (Exception e) {
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		} catch (SAXException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
