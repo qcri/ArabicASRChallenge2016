@@ -2,6 +2,9 @@
 
 # this script is to be used to convert MGB challenge xmls to SCLITE stm
 # format so it can be used as reference for evaluation.
+# 
+# Copyright (C) 2016, Qatar Computing Research Institute, HBKU (author: Yifan Zhang)
+#
 
 __author__ = 'Yifan Zhang (yzhang@qf.org.qa)'
 
