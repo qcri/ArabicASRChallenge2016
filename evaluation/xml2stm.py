@@ -38,7 +38,7 @@ def loadXml(xmlFileName, opts):
   segments = trans.getElementsByTagName('segments')[0]
   elements = []
   for segment in segments.getElementsByTagName('segment'):
-    sid = segment.attributes['id'].value
+    sid = segment.attributes['id'].value.split('_')[0]
     startTime = float(segment.attributes['start'].value)
     endTime = float(segment.attributes['end'].value)
 
