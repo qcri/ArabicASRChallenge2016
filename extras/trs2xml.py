@@ -73,23 +73,31 @@ def xml(data, xmlFileName):
   head = SubElement(doc, 'head')
   recording = SubElement(head, 'recording')
   annotations = SubElement(head, 'annotations')
-  annotation = SubElement(annotations, 'annotation', {'id':'manual'})
+  annotation_id = 'transcript_manual'
+  annotation = SubElement(annotations, 'annotation', {'id':annotation_id})
   speakers = SubElement(head, 'speakers')
   speakerSet = set()
   programSet = set()
   body = SubElement(doc, 'body')
-  segments = SubElement(body, 'segments')
+  segments = SubElement(body, 'segments', {'annotation_id':annotation_id})
   programId = data['id']
   wordCount = 0
-  for e in data['turn']:
+  for i, e in enumerate(data['turn']):
     tokens = e.text.split()
     startTime = e.startTime
     endTime = e.endTime
-
-    segment = SubElement(segments, 'segment', OrderedDict([('id',programId),
-                                               ('start',str(startTime)),
-                                               ('end',str(endTime)),
-                                               ('annotation_id','manual')]))
+    averageWordDuration = (e.endTime - e.startTime) / len(tokens)
+    speakerName = "{}_unknown_{}".format(programId, i)
+    if speakerName not in speakerSet:
+      speaker = SubElement(speakers, 'speaker', OrderedDict([('id', speakerName), ('name', speakerName)]))
+      speakerSet.add(speaker)
+    segment = SubElement(segments, 'segment', OrderedDict([('id',"{}_utt_{}".format(programId,i)),
+                                               ('starttime', str(startTime)),
+                                               ('endtime', str(endTime)),
+                                               ('AWD', "{:2f}".format(averageWordDuration)),
+                                               ('PMER', "0.0"),
+                                               ('WMER', "0.0"),
+                                               ('who', speakerName)]))
     for word in tokens:
       element = SubElement(segment, 'element', OrderedDict([('id',"{}_w{}".format(programId, wordCount)),
                                                 ('type','word')]))
