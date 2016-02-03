@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# Copyright (C) 2016 Qatar Computing Research Institute, HBKU (author: yzhang)
+
 __author__ = 'Yifan Zhang (yzhang@qf.org.qa)'
 
 import os
@@ -60,6 +62,26 @@ def ctm(data):
       out.write(token)
       out.write("\n")
 
+def tra(data):
+  """ generate tra file (as Hamdy generated for training)
+  """
+  import time
+  def format_timestamp(t, mrec_separator=','):
+    ms = t - int(t)
+    s = time.strftime("%H:%M:%S,", time.gmtime(t))
+    return s + "{:02d}".format(int(ms*100))
+    
+  out = codecs.getwriter('utf-8')(sys.stdout)
+  for i,e in enumerate(data['turn']):
+    startTime = format_timestamp(e.startTime)
+    endTime = format_timestamp(e.endTime)
+    tokens = e.text.split()
+    awd = (e.endTime - e.startTime) / len(tokens)
+    out.write("{}.xml_UNKNOWN-{}_{}_{} ".format(data['id'], i, startTime, endTime))
+    out.write(e.text)
+    out.write(" Words:{} Correct:{}\tCorrect:100\tIns:0\tDel:0\tWMER:0.0\tPMER:0.0\tAWD:{:2f}\tStart:1\tEnd:1\n".format(len(tokens),
+                len(tokens), awd))
+
 def xml(data, xmlFileName):
   from lxml.etree import ElementTree, Element, SubElement, Comment, tostring
   from collections import OrderedDict
@@ -114,6 +136,8 @@ def main(args):
     stm(data)
   elif args.ctm:
     ctm(data)
+  elif args.tra:
+    tra(data)
   else:
     xml(data, args.xmlFileName)
   
@@ -128,6 +152,8 @@ if __name__ == '__main__':
                       help="output sclite stm file for scoring")
   parser.add_argument("--ctm", dest="ctm", default=False, action='store_true',
                       help="output ctm file for testing")
+  parser.add_argument("--tra", dest="tra", default=False, action='store_true',
+                      help="output tra file")
   parser.add_argument("--skip-bad-segments", dest="skip_bs", default=False, action='store_true',
                       help="skip segments with ###, these are either overlapped speech or unintelligible speech")
   parser.add_argument(dest="trsFileName", metavar="trs", type=str)
