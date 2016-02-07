@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Copyright (C) 2016, Qatar Computing Research Institute, HBKU
+
 set -e
 
 if [ $# -ne 3 ]; then
@@ -25,10 +27,21 @@ cat train.full | while read basename; do
     echo $basename $wavdir/$basename.wav >> $dir/wav.scp
 done
 
-cat dev.full | while read basename; do
+cat test.full | while read basename; do
     [ ! -e $xmldir/$basename.xml ] && echo "Missing $xmldir/$basename.xml" && exit 1
-    $XMLSTARLET/xmlstarlet sel -t -m '//segments[@annotation_id="transcript_align"]' -m "segment" -n -v  "concat(@who,' ',@starttime,' ',@endtime,' ',@WMER,' ')" -m "element" -v "concat(text(),' ')" $xmldir/$basename.xml | local/add_to_datadir.py $basename $dirtest $mer
+    $XMLSTARLET/xmlstarlet sel -t -m '//segments[@annotation_id="transcript_manual"]' -m "segment" -n -v  "concat(@who,' ',@starttime,' ',@endtime,' ',@WMER,' ')" -m "element" -v "concat(text(),' ')" $xmldir/$basename.xml | local/add_to_datadir.py $basename $dirtest $mer
     echo $basename $wavdir/$basename.wav >> $dirtest/wav.scp
+done
+
+#Adding a column for the channel. The format is required by the script convert_ctm.pl
+for f in $dirtest/wav.scp; do
+    sed -i "s/$/ 0/" $f;
+done
+
+#stm reference file for scoring
+cat test.full | while read basename; do
+    [ ! -e $xmldir/$basename.xml ] && echo "Missing $xmldir/$basename.xml" && exit 1
+    local/xml2stm.py --buck $xmldir/$basename.xml >> $dirtest/test.stm
 done
 
 sort -k 2 $dir/utt2spk | utils/utt2spk_to_spk2utt.pl > $dir/spk2utt
@@ -37,7 +50,6 @@ sort -k 2 $dirtest/utt2spk | utils/utt2spk_to_spk2utt.pl > $dirtest/spk2utt
 
 utils/fix_data_dir.sh $dir
 utils/validate_data_dir.sh --no-feats $dir
-
 
 utils/fix_data_dir.sh $dirtest
 utils/validate_data_dir.sh --no-feats $dirtest

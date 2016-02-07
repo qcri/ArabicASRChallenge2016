@@ -1,9 +1,17 @@
 #!/bin/bash
 
+# Copyright (C) 2016, Qatar Computing Research Institute, HBKU
+
 if [ -f path.sh ]; then
   . path.sh; else
    echo "missing path.sh"; exit 1;
 fi 
+
+#Sameer: no need for this
+#for dir in test_mer$mer train_mer$mer; do 
+#   cp -pr data/local/$dir data/$dir
+#done
+
 
 mkdir -p data/lang_test
 
@@ -13,6 +21,7 @@ arpa_lm=data/local/lm/3gram-mincount/lm_unpruned.gz
 rm -r data/lang_test
 cp -r data/lang data/lang_test
 
+# grep -v '<s> <s>' etc. is only for future-proofing this script.  Our
 # LM doesn't have these "invalid combinations".  These can cause 
 # determinization failures of CLG [ends up being epsilon cycles].
 # Note: remove_oovs.pl takes a list of words in the LM that aren't in
