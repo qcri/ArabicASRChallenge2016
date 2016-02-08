@@ -1,0 +1,255 @@
+/**
+ * Copyright (C) 2016, Qatar Computing Research Institute, HBKU
+ */
+
+package mgbmain;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+
+import mgbbeans.CtmFileBean;
+import mgbbeans.SegmentsFileBean;
+import mgbbeans.SegmentsFileLineBean;
+
+public class CleanCTM {
+
+	private static File ctmFile;
+	private static File devSegmentsFile;
+	private static LinkedHashMap<String, SegmentsFileLineBean> segmentsFileMap;
+	private static ListMultimap<String, SegmentsFileLineBean> ctmFileMap;
+	private static SegmentsFileBean segmentsFileBean;
+	private static CtmFileBean ctmFileBean;
+	private static ListMultimap<String, SegmentsFileLineBean> sortedCtmMap;
+	private static String cleanCtmDirectory;
+	private static DecimalFormat df = new DecimalFormat("#.00");
+
+	static {
+		ctmFileBean = new CtmFileBean();
+		segmentsFileBean = new SegmentsFileBean();
+		segmentsFileMap = new LinkedHashMap<String, SegmentsFileLineBean>();
+		sortedCtmMap = ArrayListMultimap.create();
+		ctmFileMap = ArrayListMultimap.create();
+	}
+
+	public static void main(String... args) throws IOException {
+		System.out.println("++Reordering ctm Files to match the stm file for scoring++");
+		setFilePaths(args);
+		fillCtmFileMap();
+		segmentsFileBean.setSegmentsFileMap(getSegmentsFileMap());
+		// ctmFileBean.setCtmFileMap(updateCtmFileMap());
+		// sortCtmMap();
+		writeCtmMapToFile();
+		System.out.println("++done++");
+	}
+
+	private static void sortCtmMap() {
+
+		ListMultimap<String, SegmentsFileLineBean> ctmFileMap = ctmFileBean.getCtmFileMap();
+		for (String segmentId : ctmFileMap.keySet()) {
+			List<SegmentsFileLineBean> ctmLineBeans = ctmFileMap.get(segmentId);
+			for (SegmentsFileLineBean segmentBean : ctmLineBeans) {
+				String segmentID = segmentBean.getSegmentID();
+				sortedCtmMap.put(segmentID.replaceAll("_.*", ""), segmentBean);
+			}
+		}
+
+		/*
+		 * Sorting the map which needs to be written to the file on the basis of
+		 * the start time
+		 */
+		for (String programID : sortedCtmMap.keySet()) {
+			List<SegmentsFileLineBean> ctmLineBeans = sortedCtmMap.get(programID);
+			Collections.sort(ctmLineBeans, new Comparator<SegmentsFileLineBean>() {
+				@Override
+				public int compare(final SegmentsFileLineBean object1, final SegmentsFileLineBean object2) {
+					return Double.compare(Double.parseDouble(object1.getStartTime()),
+							Double.parseDouble(object2.getStartTime()));
+				}
+			});
+		}
+
+	}
+
+	private static void writeCtmMapToFile() throws IOException {
+		// System.out.println("++Writing Map to File++");
+		BufferedWriter bw = null;
+		// System.out.println("++INDIVIDUAL CTM FILES: " +
+		// ctmFileMap.keySet().size());
+		for (String programID : ctmFileMap.keySet()) {
+			List<SegmentsFileLineBean> ctmFileLineBeans = ctmFileMap.get(programID);
+			for (SegmentsFileLineBean ctmLineBean : ctmFileLineBeans) {
+				bw = new BufferedWriter(new FileWriter(cleanCtmDirectory + "/" + programID + ".ctm", true));
+				try {
+					bw.write(programID + " " + "0" + " " + ctmLineBean.getStartTime() + " " + ctmLineBean.getDuration()
+							+ " " + ctmLineBean.getWord() + " " + "\n");
+				} catch (IOException e) {
+					e.printStackTrace();
+				} finally {
+					try {
+						bw.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+
+	}
+
+	private static ListMultimap<String, SegmentsFileLineBean> updateCtmFileMap() {
+		System.out.println("UPDATING CTM FILE MAP");
+		for (String segmentID : ctmFileMap.keySet()) {
+			SegmentsFileLineBean segmentBean = segmentsFileMap.get(segmentID);
+			String startTime = segmentBean.getStartTime();
+			updateTimeInfoCtmMap(startTime, segmentID);
+		}
+
+		System.out.println("DONE: " + ctmFileMap.size());
+		return ctmFileMap;
+	}
+
+	private static void updateTimeInfoCtmMap(String startTime, String segmentID) {
+		List<SegmentsFileLineBean> ctmLineBeans = ctmFileMap.get(segmentID);
+		SegmentsFileLineBean firstLineBean = ctmLineBeans.get(0);
+		firstLineBean.setStartTime(
+				df.format(round(Double.parseDouble(startTime) + Double.parseDouble(firstLineBean.getStartTime()), 2)));
+		for (int i = 1; i < ctmLineBeans.size(); i++) {
+			SegmentsFileLineBean ctmFileLineBean = ctmLineBeans.get(i);
+			ctmFileLineBean.setStartTime(df.format(
+					round(Double.parseDouble(startTime) + Double.parseDouble(ctmFileLineBean.getStartTime()), 2)));
+		}
+
+	}
+
+	public static double round(double value, int places) {
+		if (places < 0)
+			throw new IllegalArgumentException();
+
+		BigDecimal bd = new BigDecimal(value);
+		bd = bd.setScale(places, RoundingMode.HALF_UP);
+		return bd.doubleValue();
+	}
+
+	private static LinkedHashMap<String, SegmentsFileLineBean> getSegmentsFileMap() {
+		// System.out.println("++GETTING SEGMENTS FILE MAP+++");
+		BufferedReader br = getReader(devSegmentsFile);
+		try {
+			String segment;
+			while ((segment = br.readLine()) != null) {
+				SegmentsFileLineBean segmentBean = new SegmentsFileLineBean();
+				String[] splitted = segment.split(" ");
+				segmentBean.setSegmentID(splitted[0]);
+				segmentBean.setProgramID(splitted[1]);
+				segmentBean.setStartTime(splitted[2]);
+				segmentBean.setEndTime(splitted[3]);
+				segmentsFileMap.put(segmentBean.getSegmentID(), segmentBean);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		// System.out.println("++DONE++ " + segmentsFileMap.size());
+		return segmentsFileMap;
+	}
+
+	private static void fillCtmFileMap() {
+		// System.out.println("++PREPARING CTM FILE MAP++");
+		BufferedReader br = getReader(ctmFile);
+		try {
+			String ctmFileCurrentLine;
+			while ((ctmFileCurrentLine = br.readLine()) != null) {
+				SegmentsFileLineBean ctmLineBean = new SegmentsFileLineBean();
+				String[] splitted = ctmFileCurrentLine.split(" ");
+				// System.out.println(splitted[0]);
+				ctmLineBean.setSegmentID(splitted[0].split("/")[7].replace(".wav", ""));
+				ctmLineBean.setStartTime(splitted[2]);
+				ctmLineBean.setDuration(splitted[3]);
+				ctmLineBean.setWord(splitted[4]);
+				// ctmLineBean.setConf(splitted[5]);
+				ctmFileMap.put(ctmLineBean.getSegmentID(), ctmLineBean);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// System.out.println("DONE: LENGTH" + ctmFileMap.keySet().size());
+	}
+
+	private static BufferedReader getReader(File file) {
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(file));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		return br;
+	}
+
+	private static void setFilePaths(String[] args) {
+		if (args.length > 2) {
+			ctmFile = new File(args[0]);
+			devSegmentsFile = new File(args[1]);
+			cleanCtmDirectory = args[2];
+		} else {
+			System.err.println("++NOT Enough args++");
+		}
+
+	}
+
+	public static void cleanCTM(String ctmFilePath) {
+		File ctmfile = null;
+		File cleanFile = null;
+
+		ctmfile = new File(ctmFilePath);
+		if (!ctmfile.exists()) {
+			System.err.println("FILE DOES NOT EXIST");
+			System.exit(-1);
+		} else {
+			System.out.println(ctmfile.getParent());
+			cleanFile = new File(ctmfile.getParent() + "/" + ctmfile.getName().replace(".ctm", ".clean.ctm"));
+		}
+
+		BufferedReader br = null;
+		BufferedWriter bw = null;
+		try {
+			br = new BufferedReader(new FileReader(ctmfile));
+			bw = new BufferedWriter(new FileWriter(cleanFile));
+			String currentLine;
+			while ((currentLine = br.readLine()) != null) {
+				String[] splitSpace = currentLine.split(" ");
+				String segmentInfo = splitSpace[0];
+				String cleanSegment = segmentInfo.replaceAll("_.*", "");
+				splitSpace[1] = "0";
+				String toWrite = cleanSegment + " " + splitSpace[1] + " " + splitSpace[2] + " " + splitSpace[3] + " "
+						+ splitSpace[4] + " " + splitSpace[5];
+				bw.write(toWrite + "\n");
+
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				bw.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+}

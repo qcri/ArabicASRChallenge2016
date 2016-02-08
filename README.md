@@ -7,4 +7,8 @@ This repository is for additional resources for Arabic Broadcast Transcription C
 
 ## Resources ##
 
+* SCLITE
 
+  `wget  ftp://jaguar.ncsl.nist.gov/pub/sctk-2.4.10-20151007-1312Z.tar.bz2`
+
+* DDSCORE
