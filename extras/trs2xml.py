@@ -79,7 +79,7 @@ def tra(data):
     awd = (e.endTime - e.startTime) / len(tokens)
     out.write("{}.xml_UNKNOWN-{}_{}_{} ".format(data['id'], i, startTime, endTime))
     out.write(e.text)
-    out.write(" Words:{} Correct:{}\tCorrect:100\tIns:0\tDel:0\tWMER:0.0\tPMER:0.0\tAWD:{:2f}\tStart:1\tEnd:1\n".format(len(tokens),
+    out.write("\tWords:{} Correct:{}\tCorrect:100\tIns:0\tDel:0\tWMER:0.0\tPMER:0.0\tAWD:{:2f}\tStart:1\tEnd:1\n".format(len(tokens),
                 len(tokens), awd))
 
 def xml(data, xmlFileName):
