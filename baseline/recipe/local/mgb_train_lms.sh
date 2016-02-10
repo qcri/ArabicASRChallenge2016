@@ -3,6 +3,7 @@
 # Copyright (C) 2016, Qatar Computing Research Institute, HBKU
 # To be run from one directory above this script.
 
+mer=$1
 
 lexicon=data/local/dict/lexicon.txt 
 [ ! -f $lexicon ] && echo "$0: No such file $lexicon" && exit 1;
@@ -43,7 +44,8 @@ export PATH=$PATH:./../../../tools/kaldi_lm
 
 dir=data/local/lm
  mkdir -p $dir
- text=data/local/train/text
+ text=data/train_mer$mer/text
+
  [ ! -f $text ] && echo "$0: No such file $text" && exit 1;
  
  cleantext=$dir/text.no_oov
@@ -74,13 +76,6 @@ dir=data/local/lm
     || exit 1;
  
  train_lm.sh --arpa --lmtype 3gram-mincount $dir || exit 1;
-
-# LM is small enough that we don't need to prune it (only about 0.7M N-grams).
-# Perplexity over 128254.000000 words is 90.446690
-
-# note: output is
-# data/local/lm/3gram-mincount/lm_unpruned.gz 
-
 
 # From here is some commands to do a baseline with SRILM (assuming
 # you have it installed).
