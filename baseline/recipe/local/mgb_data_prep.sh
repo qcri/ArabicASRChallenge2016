@@ -21,27 +21,35 @@ mkdir -p $dirtest
 
 rm -f $dir/{wav.scp,feats.scp,utt2spk,spk2utt,segments,text} $dirtest/{wav.scp,feats.scp,utt2spk,spk2utt,segments,text}
 
-cat train.full | while read basename; do     
+rm -f train.full dev.full train.short
+
+#Creating the train and dev program lists
+cut -d '/' train -f2 | head -500 >> train.short
+cut -d '/' dev -f2 >> dev.full
+
+cat train.short | while read basename; do     
     [ ! -e $xmldir/$basename.xml ] && echo "Missing $xmldir/$basename.xml" && exit 1
     $XMLSTARLET/xmlstarlet sel -t -m '//segments[@annotation_id="transcript_align"]' -m "segment" -n -v  "concat(@who,' ',@starttime,' ',@endtime,' ',@WMER,' ')" -m "element" -v "concat(text(),' ')" $xmldir/$basename.xml | local/add_to_datadir.py $basename $dir $mer
     echo $basename $wavdir/$basename.wav >> $dir/wav.scp
 done
 
-cat test.full | while read basename; do
+cat dev.full | while read basename; do
     [ ! -e $xmldir/$basename.xml ] && echo "Missing $xmldir/$basename.xml" && exit 1
     $XMLSTARLET/xmlstarlet sel -t -m '//segments[@annotation_id="transcript_manual"]' -m "segment" -n -v  "concat(@who,' ',@starttime,' ',@endtime,' ',@WMER,' ')" -m "element" -v "concat(text(),' ')" $xmldir/$basename.xml | local/add_to_datadir.py $basename $dirtest $mer
     echo $basename $wavdir/$basename.wav >> $dirtest/wav.scp
 done
 
-#Adding a column for the channel. The format is required by the script convert_ctm.pl
-for f in $dirtest/wav.scp; do
+#Creating a file reco2file_channel which is used by convert_ctm.pl in local/score.sh script
+rm -rf reco2file_channel
+cat $dirtest/wav.scp >> $dirtest/reco2file_channel
+for f in $dirtest/reco2file_channel; do
     sed -i "s/$/ 0/" $f;
 done
 
 #stm reference file for scoring
-cat test.full | while read basename; do
+cat dev.full | while read basename; do
     [ ! -e $xmldir/$basename.xml ] && echo "Missing $xmldir/$basename.xml" && exit 1
-    local/xml2stm.py --buck $xmldir/$basename.xml >> $dirtest/test.stm
+    local/xml2stm.py $xmldir/$basename.xml >> $dirtest/test.stm
 done
 
 sort -k 2 $dir/utt2spk | utils/utt2spk_to_spk2utt.pl > $dir/spk2utt

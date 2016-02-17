@@ -7,12 +7,6 @@ if [ -f path.sh ]; then
    echo "missing path.sh"; exit 1;
 fi 
 
-#Sameer: no need for this
-#for dir in test_mer$mer train_mer$mer; do 
-#   cp -pr data/local/$dir data/$dir
-#done
-
-
 mkdir -p data/lang_test
 
 arpa_lm=data/local/lm/3gram-mincount/lm_unpruned.gz
