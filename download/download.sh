@@ -22,6 +22,8 @@ file=$3   # List with file names
 folder=$4 # Destination folder
 ext=$5    # File extension (wav, xml, ...)
 
+mkdir -p $folder
+
 while read v; do
    # For each file in the file list
    echo $v
