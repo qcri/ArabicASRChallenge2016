@@ -11,10 +11,11 @@ import codecs
 from xml.dom import minidom
 
 class Element(object):
-  def __init__(self, text, startTime, endTime=None):
+  def __init__(self, text, startTime, endTime=None, speaker=None):
     self.text = text
     self.startTime = startTime
     self.endTime = endTime
+    self.speaker = speaker
 
 def loadTrs(trsFileName, opts):
   dom = minidom.parse(open(trsFileName, 'r'))
@@ -26,20 +27,46 @@ def loadTrs(trsFileName, opts):
   startTime = float(turn.attributes['startTime'].value)
   endTime = float(turn.attributes['endTime'].value)
   elements = []
+  needUpdateEndTime = False
   for i in xrange(1, len(turn.childNodes), 2):
     sync = turn.childNodes[i]
     startTime = float(sync.attributes['time'].value)
     textNode = turn.childNodes[i+1]
     assert textNode.nodeType == textNode.TEXT_NODE
     text = textNode.data.strip()
-    if text == "": continue
-    if opts.skip_bs and text.startswith('###'): continue
     e = Element(text=text, startTime=startTime)
-    if elements:
+    if needUpdateEndTime:
       elements[-1].endTime = startTime
+    # for empty segments, we don't need to update endtime
+    if text == "" or (opts.skip_bs and text.startswith('##')): 
+      needUpdateEndTime = False
+      continue
     elements.append(e)
+    needUpdateEndTime = True
   elements[-1].endTime = endTime
   return {'id': uid, 'start_time': startTime, 'end_time': endTime, 'turn': elements}
+
+def loadMgb(mgbFileName, opts):
+  import xmltodict
+  with codecs.open(mgbFileName, 'r', 'utf-8') as fd:
+    doc = xmltodict.parse(fd.read())
+    speakers = { speaker['@id']:speaker['@name'] for speaker in doc['transcript']['head']['speakers']['speaker']}
+    turns = []
+    uid = None
+    for segment in doc['transcript']['body']['segments']['segment']:
+      uid = segment["@id"]
+      startTime = float(segment["@starttime"])
+      endTime = float(segment["@endtime"])
+      speakerName = speakers[segment["@who"]]
+      elements = segment['element']
+      if isinstance(elements, list):
+        text = u' '.join([e['#text'] for e in elements])
+      else:
+        text = elements['#text']
+      turns.append(Element(text, startTime, endTime, speakerName))
+
+    return {'id': uid, 'start_time': 0.0, 'end_time': 0.0, 'turn': turns, 'speaker': set(speakers.values())}
+
 
 def stm(data):
   out = codecs.getwriter('utf-8')(sys.stdout)
@@ -62,7 +89,7 @@ def ctm(data):
       out.write(token)
       out.write("\n")
 
-def tra(data):
+def tra(data, speakers):
   """ generate tra file (as Hamdy generated for training)
   """
   import time
@@ -76,10 +103,12 @@ def tra(data):
     startTime = format_timestamp(e.startTime)
     endTime = format_timestamp(e.endTime)
     tokens = e.text.split()
+    speaker = speakers[i]
+    speaker = speaker.replace(u' ', u'-')
     awd = (e.endTime - e.startTime) / len(tokens)
-    out.write("{}.xml_UNKNOWN-{}_{}_{} ".format(data['id'], i, startTime, endTime))
+    out.write(u"{}.xml_{}_{}_{} ".format(data['id'], speaker, startTime, endTime))
     out.write(e.text)
-    out.write("\tWords:{} Correct:{}\tCorrect:100\tIns:0\tDel:0\tWMER:0.0\tPMER:0.0\tAWD:{:2f}\tStart:1\tEnd:1\n".format(len(tokens),
+    out.write(u"\tWords:{} Correct:{}\tCorrect:100\tIns:0\tDel:0\tWMER:0.0\tPMER:0.0\tAWD:{:2f}\tStart:1\tEnd:1\n".format(len(tokens),
                 len(tokens), awd))
 
 def xml(data, xmlFileName):
@@ -98,7 +127,7 @@ def xml(data, xmlFileName):
   annotation_id = 'transcript_manual'
   annotation = SubElement(annotations, 'annotation', {'id':annotation_id})
   speakers = SubElement(head, 'speakers')
-  speakerSet = set()
+  speakerSet = data['speaker'] if 'speaker' in data else set() 
   programSet = set()
   body = SubElement(doc, 'body')
   segments = SubElement(body, 'segments', {'annotation_id':annotation_id})
@@ -109,7 +138,7 @@ def xml(data, xmlFileName):
     startTime = e.startTime
     endTime = e.endTime
     averageWordDuration = (e.endTime - e.startTime) / len(tokens)
-    speakerName = "{}_unknown_{}".format(programId, i)
+    speakerName = e.speaker if e.speaker else "{}_unknown_{}".format(programId, i)
     if speakerName not in speakerSet:
       speaker = SubElement(speakers, 'speaker', OrderedDict([('id', speakerName), ('name', speakerName)]))
       speakerSet.add(speaker)
@@ -131,13 +160,22 @@ def xml(data, xmlFileName):
 
 
 def main(args):
-  data = loadTrs(args.trsFileName, args)
+  if args.mgb:
+    data = loadMgb(args.trsFileName, args)
+  else:
+    data = loadTrs(args.trsFileName, args)
+
+  if args.spk:
+    speakers = [line.strip() for line in codecs.open(args.spk, 'r', 'utf-8')]
+  else:
+    speakers = []
+
   if args.sclite:
     stm(data)
   elif args.ctm:
     ctm(data)
   elif args.tra:
-    tra(data)
+    tra(data, speakers=speakers)
   else:
     xml(data, args.xmlFileName)
   
@@ -148,6 +186,10 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='convert Transcriber file to MGB xml')
   parser.add_argument("--id", dest="uid",
                       help="utterance id")
+  parser.add_argument("--mgb", dest="mgb", default=False, action='store_true',
+                      help="input is mgb format xml")
+  parser.add_argument("--spk", dest="spk", type=str, 
+                      help="speaker list: each line corresponding to a segment in xml")
   parser.add_argument("--sclite", dest="sclite", default=False, action='store_true',
                       help="output sclite stm file for scoring")
   parser.add_argument("--ctm", dest="ctm", default=False, action='store_true',
