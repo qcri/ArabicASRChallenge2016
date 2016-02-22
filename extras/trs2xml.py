@@ -89,7 +89,7 @@ def ctm(data):
       out.write(token)
       out.write("\n")
 
-def tra(data, speakers):
+def tra(data, speakers, opts):
   """ generate tra file (as Hamdy generated for training)
   """
   import time
@@ -102,6 +102,7 @@ def tra(data, speakers):
   for i,e in enumerate(data['turn']):
     startTime = format_timestamp(e.startTime)
     endTime = format_timestamp(e.endTime)
+    if opts.skip_bs and e.text.startswith('@@@'): continue
     tokens = e.text.split()
     speaker = speakers[i]
     speaker = speaker.replace(u' ', u'-')
@@ -175,7 +176,7 @@ def main(args):
   elif args.ctm:
     ctm(data)
   elif args.tra:
-    tra(data, speakers=speakers)
+    tra(data, speakers=speakers, opts=args)
   else:
     xml(data, args.xmlFileName)
   
