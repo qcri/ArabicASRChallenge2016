@@ -37,11 +37,11 @@ import com.google.common.collect.ListMultimap;
 
 import mgbbeans.ProgramBean;
 import mgbbeans.SegmentBean;
-
+import mgbmain.Alphabet;
 
 public class MGBUtil {
 
-	public static LinkedHashMap<String, ProgramBean> getALJProgramInformation(String ajFileURL) {
+	public static LinkedHashMap<String, ProgramBean> getALJProgramInformation(String ajFileURL, String bukwalterFlag) {
 
 		System.out.println("+++CREATING ALJ PROGRAM MAP++++");
 		LinkedHashMap<String, ProgramBean> programInfoMap = new LinkedHashMap<String, ProgramBean>();
@@ -49,15 +49,19 @@ public class MGBUtil {
 		ProgramBean programBean = null;
 
 		try {
-                        //Serial, EntityID, ArticleGuid, ArticleTitle, ProgramName, FriendlyURL
-			
-                    reader = new BufferedReader(new FileReader(new File(ajFileURL)));
+			// Serial, EntityID, ArticleGuid, ArticleTitle, ProgramName,
+			// FriendlyURL
+
+			reader = new BufferedReader(new FileReader(new File(ajFileURL)));
 			String currentLine;
 			currentLine = reader.readLine();
-                        while ((currentLine = reader.readLine()) != null) {
+			while ((currentLine = reader.readLine()) != null) {
 				programBean = new ProgramBean();
 				String[] splittedTDF = currentLine.split("\t");
-				programBean.setTitle(ArabicUtils.utf82buck(splittedTDF[4]));
+				if (bukwalterFlag.equalsIgnoreCase("yes"))
+					programBean.setTitle(ArabicUtils.utf82buck(splittedTDF[4]));
+				else
+					programBean.setTitle(splittedTDF[4]);
 				programBean.setName(splittedTDF[3]);
 				programBean.setDate(getDate(splittedTDF[5]));
 				programInfoMap.put(splittedTDF[2].replaceAll("-", "_"), programBean);
@@ -109,12 +113,15 @@ public class MGBUtil {
 
 	public static void generateXML(ListMultimap<String, SegmentBean> segmentMap,
 			ListMultimap<String, String> speakersMap, LinkedHashMap<String, ProgramBean> programInfoMap,
-			String xmlTranscriptDestinationFolderPath) {
+			String xmlTranscriptDestinationFolderPath, String bukwalterFlag, String mapNumbersFlag,
+			String transcriptionType, String removeDiacritics, String annotateLatinWords, String removeHesitation,
+			String removeDoubleHash) throws IOException {
+		Alphabet a = new Alphabet();
+		a.allowGrowth();
+		a.turnOnCounts();
 
 		try {
-                        int size;
 
-                        size = segmentMap.keySet().size();
 			for (String programID : segmentMap.keySet()) {
 
 				List<SegmentBean> segmentBeans = segmentMap.get(programID);
@@ -179,14 +186,20 @@ public class MGBUtil {
 					Element speaker = doc.createElement("speaker");
 					speakers.appendChild(speaker);
 					speaker.setAttribute("id", programID + "_speaker" + (i + 1) + "_align");
-					speaker.setAttribute("name", speakerNames.get(i));
+					if (bukwalterFlag.equalsIgnoreCase("yes"))
+						speaker.setAttribute("name", ArabicUtils.utf82buck(speakerNames.get(i)));
+					else
+						speaker.setAttribute("name", speakerNames.get(i));
 				}
 
 				Element body = doc.createElement("body");
 				rootElement.appendChild(body);
 
 				Element segments = doc.createElement("segments");
-				segments.setAttribute("annotation_id", "transcript_align");
+				if (transcriptionType.equalsIgnoreCase("train"))
+					segments.setAttribute("annotation_id", "transcript_align");
+				else if (transcriptionType.equalsIgnoreCase("dev"))
+					segments.setAttribute("annotation_id", "transcript_manual");
 				body.appendChild(segments);
 
 				int wordCount = 1;
@@ -194,9 +207,17 @@ public class MGBUtil {
 				for (int k = 0; k < segmentBeans.size(); k++) {
 					SegmentBean segmentBean = segmentBeans.get(k);
 					Element segment = doc.createElement("segment");
-					segment.setAttribute("id", segmentBean.getId() + "_utt_" + utteranceNumber + "_align");
-					segment.setAttribute("who", segmentBean.getId() + "_speaker"
-							+ (speakerNames.indexOf(segmentBean.getSpeakerName()) + 1) + "_align");
+
+					if (transcriptionType.equalsIgnoreCase("train")) {
+						segment.setAttribute("id", segmentBean.getId() + "_utt_" + utteranceNumber + "_align");
+						segment.setAttribute("who", segmentBean.getId() + "_speaker"
+								+ (speakerNames.indexOf(segmentBean.getSpeakerName()) + 1) + "_align");
+					} else if (transcriptionType.equalsIgnoreCase("dev")) {
+						segment.setAttribute("id", segmentBean.getId() + "_utt_" + utteranceNumber + "_manual");
+						segment.setAttribute("who", segmentBean.getId() + "_speaker"
+								+ (speakerNames.indexOf(segmentBean.getSpeakerName()) + 1) + "_manual");
+					}
+
 					segment.setAttribute("WMER", segmentBean.getWordMatchErrorRate());
 					segment.setAttribute("PMER", segmentBean.getGraphemeMatchErrorRate());
 					segment.setAttribute("AWD", segmentBean.getAwd());
@@ -208,14 +229,56 @@ public class MGBUtil {
 					for (int j = 0; j < words.length; j++) {
 						Element element = doc.createElement("element");
 						element.setAttribute("type", "word");
-						element.setAttribute("id", segmentBean.getId() + "_w" + wordCount + "_align");
-                                                if(words[j]!=null && !words[j].isEmpty())
-                                                {
-                                                  //System.out.println(words[j]);
-						  element.appendChild(doc.createTextNode(words[j]));
-						  segment.appendChild(element);
-						  wordCount++;
-                                                }
+
+						if (transcriptionType.equalsIgnoreCase("train"))
+							element.setAttribute("id", segmentBean.getId() + "_w" + wordCount + "_align");
+						else if (transcriptionType.equalsIgnoreCase("dev"))
+							element.setAttribute("id", segmentBean.getId() + "_w" + wordCount + "_manual");
+
+						if (words[j] != null && !words[j].isEmpty()) {
+							String word = new String(words[j]);
+
+							if (annotateLatinWords.equalsIgnoreCase("yes")) {
+								if (word.matches("[A-Za-z]+")) {
+									word = "@@LAT@@" + word;
+								}
+							}
+
+							if (removeDiacritics.equalsIgnoreCase("yes")) {
+								word = ArabicUtils.removeDiacritics(word);
+							}
+
+							if (bukwalterFlag.equalsIgnoreCase("yes")) {
+								word = ArabicUtils.utf82buck(word);
+							}
+
+							if (mapNumbersFlag.equalsIgnoreCase("yes")) {
+
+								word.replaceAll("ﻷ", "");
+								word.replaceAll("٩", "9");
+								word.replaceAll("٨", "8");
+								word.replaceAll("٧", "7");
+								word.replaceAll("٦", "6");
+								word.replaceAll("٥", "5");
+								word.replaceAll("٤", "4");
+								word.replaceAll("٣", "3");
+								word.replaceAll("٢", "2");
+								word.replaceAll("١", "1");
+								word.replaceAll("٠", "0");
+
+							}
+
+							if (removeHesitation.equalsIgnoreCase("yes")) {
+								if (word.indexOf("#") > 0) {
+									System.out.println(word);
+									word = word.substring(0, word.indexOf("#"));
+								}
+							}
+
+							element.appendChild(doc.createTextNode(word));
+							segment.appendChild(element);
+							wordCount++;
+						}
 					}
 
 					utteranceNumber++;
@@ -229,7 +292,11 @@ public class MGBUtil {
 
 			}
 
-		} catch (ParserConfigurationException e) {
+		} catch (
+
+		ParserConfigurationException e)
+
+		{
 			e.printStackTrace();
 		}
 
@@ -265,7 +332,8 @@ public class MGBUtil {
 
 	}
 
-	public static void setSegmentAttributes(String currentSegment, SegmentBean segmentBean) {
+	public static void setSegmentAttributes(String currentSegment, SegmentBean segmentBean, String normalizeFlag,
+			String removeHes) {
 		String segmentID = null;
 		String speakerName = null;
 		String startTime = null;
@@ -300,14 +368,17 @@ public class MGBUtil {
 		}
 
 		segmentBean.setId(segmentID);
+
 		segmentBean.setSpeakerName(speakerName);
 		segmentBean.setStartTime(startTime);
 		segmentBean.setEndTime(endTime);
-		if (transcriptString.matches("[A-Za-z]")) {
-			segmentBean.setTranscriptString("");
-		} else {
-			segmentBean.setTranscriptString(getNormaliseBukTranscriptString(transcriptString));
+
+		if (normalizeFlag.equalsIgnoreCase("yes")) {
+			transcriptString = getNormalisedString(transcriptString);
+			transcriptString.replaceAll("#", "");
 		}
+
+		segmentBean.setTranscriptString(transcriptString);
 		segmentBean.setWordMatchErrorRate(wordMatchErrorRate);
 		segmentBean.setGraphemeMatchErrorRate(phonemeMatchErrorRate);
 		segmentBean.setAwd(awd);
@@ -315,42 +386,42 @@ public class MGBUtil {
 	}
 
 	public static String getNormaliseBukTranscriptString(String transcriptString) {
-		// String normalised = transcriptString.replaceAll("[،؟:/!,؛\"]",
-		// "").replaceAll("[^0-9٠-٩]\\.[^0-9٠-٩]", "")
-		// .replaceAll("[\\(\\)\\[\\]_]", "").replaceAll("\\s\\s^\n", "
-		// ").replaceAll("[-\\.$]", "")
-		// .replaceAll("[A-Za-z]", "").replaceAll("(?m)^[\t]*\r?\n", "");
 		String normalised = transcriptString.replaceAll("[،؟:/!,؛\"]", "").replaceAll("[^0-9٠-٩]\\.[^0-9٠-٩]", "")
-				.replaceAll("[\\(\\)\\[\\]_]", "").replaceAll("\\s\\s^\n", " ").replaceAll("[-\\.$]", "")
-				.replaceAll("[A-Za-z]", "").replaceAll("(?m)^[\t]*\r?\n", "");
+				.replaceAll("[\\(\\)\\[\\]_]", "").replaceAll("[-\\.$]", "").replaceAll("(?m)^[\t]*\r?\n", "");
 		String buk = ArabicUtils.utf82buck(normalised);
 		return buk;
 	}
 
+	public static String getNormalisedString(String transcriptString) {
+		/*
+		 * Not removing english words and not converting to Buk here, will
+		 * convert to buk at word level while writing to xml
+		 */
+		String normalised = transcriptString.replaceAll("[،؟:/!,؛\"]", " ").replaceAll("[^0-9٠-٩]\\.[^0-9٠-٩]", " ")
+				.replaceAll("[\\(\\)\\[\\]_]", " ").replaceAll("\\s\\s^\n", " ").replaceAll("[-\\.$]", "");
+		return normalised;
+	}
+
 	public static double getTime(String timeString) {
-            
-            double[] timeArr = new double[3];
-            try
-            {
-                boolean breakpoint;
-		String[] timeStr = timeString.replace(",", ".").split(":");
 
-		for (int i = 0; i < timeStr.length; i++) {
-                            timeArr[i] = Double.parseDouble(timeStr[i]);
+		double[] timeArr = new double[3];
+		try {
+			boolean breakpoint;
+			String[] timeStr = timeString.replace(",", ".").split(":");
+
+			for (int i = 0; i < timeStr.length; i++) {
+				timeArr[i] = Double.parseDouble(timeStr[i]);
+			}
+		} catch (NumberFormatException e) {
+			System.out.println(timeString);
+			e.printStackTrace();
+
 		}
-            }
-            catch (NumberFormatException e)
-            {
-                System.out.println(timeString);
-                e.printStackTrace();
+		/*
+		 * catch (Exception e) { System.out.println(timeString);
+		 * //e.printStackTrace(); }
+		 */
 
-            }
-            /*catch (Exception e)
-            {
-                System.out.println(timeString);
-                //e.printStackTrace();
-            }*/
-            
 		double time = round((timeArr[0] * 3600 + timeArr[1] * 60 + timeArr[2]), 2);
 		return time;
 	}
