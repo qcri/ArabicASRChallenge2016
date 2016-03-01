@@ -40,7 +40,7 @@ Once we have the 'ALL_MOD.tra', we now parse this file to generate the trancript
 
 We generate both the bukwalter and the utf8 formats. The flags that need to be set for the program are:
 
-`-a <arg>           Yes/No: annotate latin words in the corpus with the
+ -a <arg>           Yes/No: annotate latin words in the corpus with the
                     tag @@LAT@@
  -b <arg>           Yes/No: remove segments from the dev set that have
                     overlap speech
@@ -58,7 +58,7 @@ We generate both the bukwalter and the utf8 formats. The flags that need to be s
  -rmNum <arg>       Yes/No Remove numbers
  -t <arg>           Train/Dev: Generate xml for training or dev set
  -tra <arg>         Absolute Path: Give the ALL.tra file
-`
+
 The settings that we use for generating the train xml trancripts for bukwalter are:
 
 `-a yes 
