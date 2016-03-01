@@ -40,103 +40,96 @@ Once we have the 'ALL_MOD.tra', we now parse this file to generate the trancript
 
 We generate both the bukwalter and the utf8 formats. The flags that need to be set for the program are:
 
- `
- -a <arg>           Yes/No: annotate latin words in the corpus with the
-                    tag @@LAT@@
+ 
+ `-a <arg>           Yes/No: annotate latin words in the corpus with the tag @@LAT@@`
                     
- -b <arg>           Yes/No: remove segments from the dev set that have
-                    overlap speech
+ `-b <arg>           Yes/No: remove segments from the dev set that have ovelap speech`
                     
- -bw <arg>          Yes/No: Convert to bukwalter or not
+ `-bw <arg>          Yes/No: Convert to bukwalter or not`
  
- -d <arg>           transcript xml files destination folder
+ `-d <arg>           transcript xml files destination folder`
  
- -h <arg>           Yes/No: remove hesitation mark or not
+ `-h <arg>           Yes/No: remove hesitation mark or not`
  
- -hh <arg>          Yes/No: remove double ## at the start of a word
+`-hh <arg>          Yes/No: remove double ## at the start of a word`
  
- -norm <arg>        Yes/No: normalize the arabic text or not, remove
-                    punctuations
+ `-norm <arg>        Yes/No: normalize the arabic text or not, remove punctuations`
                     
- -num <arg>         Yes/No: flag for mapping the arabic indic numbers to
-                    Arabic numberals
+ `-num <arg>         Yes/No: flag for mapping the arabic indic numbers the Arabic numberals`
                     
- -p <arg>           Absolute Path: program tdf file path
+ `-p <arg>           Absolute Path: program tdf file path`
  
- -rd <arg>          Yes/No: remove diacritics
+ `-rd <arg>          Yes/No: remove diacritics`
  
- -rmEnglish <arg>   Yes/No Remove the english words
+ `-rmEnglish <arg>   Yes/No Remove the english words`
  
- -rmNum <arg>       Yes/No Remove numbers
+ `-rmNum <arg>       Yes/No Remove numbers`
  
- -t <arg>           Train/Dev: Generate xml for training or dev set
+ `-t <arg>           Train/Dev: Generate xml for training or dev set`
  
- -tra <arg>         Absolute Path: Give the ALL.tra file
+ `-tra <arg>         Absolute Path: Give the ALL.tra file`
  `
  
 
 The settings that we use for generating the train xml trancripts for bukwalter are:
 
-`
--a yes 
+`-a yes` 
 
--b no 
+`-b no`
 
--bw yes 
+`-bw yes` 
 
--d /Users/alt-sameerk/Documents/mgb/dev_xml_2016_03_1/bw/ 
+`-d /Users/alt-sameerk/Documents/mgb/dev_xml_2016_03_1/bw/` 
 
--h yes 
+`-h yes` 
 
--hh no 
+`-hh no`
 
--norm yes 
+`-norm yes`
 
--num yes 
+`-num yes` 
 
--rmNum no 
+`-rmNum no` 
 
--rmEnglish no 
+`-rmEnglish no` 
 
--p /Users/alt-sameerk/Documents/mgb/exp-2015-11-10/aja_tdf.txt 
+`-p /Users/alt-sameerk/Documents/mgb/exp-2015-11-10/aja_tdf.txt` 
 
--rd yes 
+`-rd yes` 
 
--t train 
+`-t train` 
 
--tra /Users/alt-sameerk/Documents/mgb/ALL_MOD.tra
-`
+`-tra /Users/alt-sameerk/Documents/mgb/ALL_MOD.tra`
 
 and for the utf8 xml transcripts:
-`
--a no
 
--b no
+`-a no`
 
--bw no
+`-b no`
 
--d /Users/alt-sameerk/Documents/mgb/dev_xml_2016_03_1/utf8/ 
+`-bw no`
 
--h no 
+`-d /Users/alt-sameerk/Documents/mgb/dev_xml_2016_03_1/utf8/` 
 
--hh no 
+`-h no` 
 
--norm no 
+`-hh no` 
 
--num no 
+`-norm no` 
 
--rmNum no 
+`-num no` 
 
--rmEnglish no 
+`-rmNum no` 
 
--p /Users/alt-sameerk/Documents/mgb/exp-2015-11-10/aja_tdf.txt 
+`-rmEnglish no` 
 
--rd no 
+`-p /Users/alt-sameerk/Documents/mgb/exp-2015-11-10/aja_tdf.txt`
 
--t train 
+`-rd no` 
 
--tra /Users/alt-sameerk/Documents/mgb/ALL_MOD.tra
-`
+`-t train` 
+
+`-tra /Users/alt-sameerk/Documents/mgb/ALL_MOD.tra`
 
 For the dev xml transcript generation we use the same class, but just changing the `-t` flag to `dev` and also generating the dev transcript file using the python script `/extras/trs2xml.py`
 
