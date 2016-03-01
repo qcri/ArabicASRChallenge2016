@@ -13,7 +13,7 @@ This repository is for additional resources for Arabic Broadcast Transcription C
 
 * DDSCORE
 
-* Transcript Generation [IN PROGRESS: SAMEER]
+## Transcript Generation ## [IN PROGRESS: SAMEER]
 
 This section explaing the xml transcript generation process that we followed to generate training transcripts (xml) and the dev transcripts (xml) from the original transcripts provided by AL Jazeera
 
