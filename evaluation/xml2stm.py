@@ -38,11 +38,12 @@ def loadXml(xmlFileName, opts):
   segments = trans.getElementsByTagName('segments')[0]
   elements = []
   for segment in segments.getElementsByTagName('segment'):
-    sid = segment.attributes['id'].value.split('_')[0]
-    startTime = float(segment.attributes['start'].value)
-    endTime = float(segment.attributes['end'].value)
+    sid = segment.attributes['id'].value.split('_utt_')[0].replace("_","-")
+    startTime = float(segment.attributes['starttime'].value)
+    endTime = float(segment.attributes['endtime'].value)
 
-    tokens = [e.childNodes[0].data for e in segment.getElementsByTagName('element')]
+    # Fix Issue:#2 https://github.com/Qatar-Computing-Research-Institute/ArabicASRChallenge2016/issues/2
+    tokens = [e.childNodes[0].data for e in segment.getElementsByTagName('element') if len(e.childNodes)]
     # skip any word starts with '#'
     tokens = filter(lambda i: not i.startswith('#'), tokens)
     # convert to buckwalter if required
