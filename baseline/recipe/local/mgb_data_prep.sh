@@ -40,7 +40,7 @@ cat dev.full | while read basename; do
 done
 
 #Creating a file reco2file_channel which is used by convert_ctm.pl in local/score.sh script
-rm -rf reco2file_channel
+rm -rf $dirtest/reco2file_channel
 cat $dirtest/wav.scp >> $dirtest/reco2file_channel
 for f in $dirtest/reco2file_channel; do
     sed -i "s/$/ 0/" $f;
