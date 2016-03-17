@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016, Qatar Computing Research Institute, HBKU
+ * 
  */
 
 package mgbmain;
@@ -47,12 +47,14 @@ public class CleanCTM {
 	}
 
 	public static void main(String... args) throws IOException {
-		System.out.println("++Reordering ctm Files to match the stm file for scoring++");
+		System.out.println("++Reorder ctm Files to match the stm file for scoring++");
 		setFilePaths(args);
 		fillCtmFileMap();
 		segmentsFileBean.setSegmentsFileMap(getSegmentsFileMap());
-		// ctmFileBean.setCtmFileMap(updateCtmFileMap());
-		// sortCtmMap();
+		// No need to update the timing info. Already been taken care of in
+		// Kaldi
+		ctmFileBean.setCtmFileMap(ctmFileMap);
+		sortCtmMap();
 		writeCtmMapToFile();
 		System.out.println("++done++");
 	}
@@ -64,6 +66,7 @@ public class CleanCTM {
 			List<SegmentsFileLineBean> ctmLineBeans = ctmFileMap.get(segmentId);
 			for (SegmentsFileLineBean segmentBean : ctmLineBeans) {
 				String segmentID = segmentBean.getSegmentID();
+
 				sortedCtmMap.put(segmentID.replaceAll("_.*", ""), segmentBean);
 			}
 		}
@@ -90,8 +93,8 @@ public class CleanCTM {
 		BufferedWriter bw = null;
 		// System.out.println("++INDIVIDUAL CTM FILES: " +
 		// ctmFileMap.keySet().size());
-		for (String programID : ctmFileMap.keySet()) {
-			List<SegmentsFileLineBean> ctmFileLineBeans = ctmFileMap.get(programID);
+		for (String programID : sortedCtmMap.keySet()) {
+			List<SegmentsFileLineBean> ctmFileLineBeans = sortedCtmMap.get(programID);
 			for (SegmentsFileLineBean ctmLineBean : ctmFileLineBeans) {
 				bw = new BufferedWriter(new FileWriter(cleanCtmDirectory + "/" + programID + ".ctm", true));
 				try {
@@ -112,14 +115,13 @@ public class CleanCTM {
 	}
 
 	private static ListMultimap<String, SegmentsFileLineBean> updateCtmFileMap() {
-		System.out.println("UPDATING CTM FILE MAP");
+
 		for (String segmentID : ctmFileMap.keySet()) {
 			SegmentsFileLineBean segmentBean = segmentsFileMap.get(segmentID);
 			String startTime = segmentBean.getStartTime();
 			updateTimeInfoCtmMap(startTime, segmentID);
 		}
 
-		System.out.println("DONE: " + ctmFileMap.size());
 		return ctmFileMap;
 	}
 
@@ -167,7 +169,7 @@ public class CleanCTM {
 	}
 
 	private static void fillCtmFileMap() {
-		// System.out.println("++PREPARING CTM FILE MAP++");
+		System.out.println("++PREPARING CTM FILE MAP++");
 		BufferedReader br = getReader(ctmFile);
 		try {
 			String ctmFileCurrentLine;
@@ -175,7 +177,9 @@ public class CleanCTM {
 				SegmentsFileLineBean ctmLineBean = new SegmentsFileLineBean();
 				String[] splitted = ctmFileCurrentLine.split(" ");
 				// System.out.println(splitted[0]);
-				ctmLineBean.setSegmentID(splitted[0].split("/")[7].replace(".wav", ""));
+				String[] split = splitted[0].split("/");
+				String segmentID = split[split.length - 1].replace(".wav", "");
+				ctmLineBean.setSegmentID(segmentID);
 				ctmLineBean.setStartTime(splitted[2]);
 				ctmLineBean.setDuration(splitted[3]);
 				ctmLineBean.setWord(splitted[4]);
