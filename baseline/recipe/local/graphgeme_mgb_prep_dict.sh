@@ -15,8 +15,13 @@ lexdir=$1
 echo SIL > $dir/silence_phones.txt
 echo SIL > $dir/optional_silence.txt
 
-cp $lexdir/crpx.dct $dir
-mv $dir/crpx.dct $dir/lexicon.txt
+lexicon=$lexdir/ar-ar_grapheme_lexicon
+if [ ! -f $lexicon ]; then
+  echo "$0: no such file $lexicon"
+  exit 1;
+fi
+
+sed '2,$!d' $lexicon > $dir/lexicon.txt
 cat $dir/lexicon.txt | cut -d ' ' -f2- | tr -s ' ' '\n' |\
 sort -u >  $dir/nonsilence_phones.txt || exit 1;
 
