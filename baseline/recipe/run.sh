@@ -185,17 +185,16 @@ local/nnet/run_dnn.sh $mer
 
 
 time=$(date +"%Y-%m-%d-%H-%M-%S")
-
+results=baseline.$time
 #SCORING IS DONE USING SCLITE
 for x in exp/*/*/decode*; do [ -d $x ] && grep Sum $x/score_*/*.sys | utils/best_wer.sh; done | sort -n -k2 > tmp$$
 
-echo "non_overlap_speech_WER:" > RESULTS
-echo "###" >> RESULTS
-grep decode_overlap tmp$$ >> RESULTS
-echo "" >> RESULTS
-echo "" >> RESULTS
-echo "overlap_speech_WER:" >> RESULTS
-echo "###" >> RESULTS
-grep decode_non_overlap tmp$$ >> RESULTS
-echo "" >> RESULTS
+echo "non_overlap_speech_WER:" > $results
+grep decode_non_overlap tmp$$ >> $results
+echo "" >> $results
+echo "" >> $results
+echo "overlap_speech_WER:" >> $results
+grep decode_overlap tmp$$ >> $results
+echo "" >> $results
+rm -fr tmp$$
 
