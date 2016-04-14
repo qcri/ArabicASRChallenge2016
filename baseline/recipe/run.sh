@@ -1,8 +1,6 @@
-#!/bin/bash -u
+#!/bin/bash -aux
 
 # Copyright (C) 2016, Qatar Computing Research Institute, HBKU
-
-set -e
 
 . ./cmd.sh
 . ./path.sh
@@ -52,20 +50,20 @@ mer=80
 # TO DO: set the location of downloaded WAV files, XML, LM text and the LEXICON
 
 # Location of downloaded WAV files
-WAV_DIR=/data/sls/scratch/sameerk/mgb_arabic_data/wav
+WAV_DIR=/data/scratch/mgb/data/audio
 
 # Location of downloaded XML files
-XML_DIR=/data/sls/scratch/sameerk/mgb_arabic_data/xml
+XML_DIR=/data/scratch/mgb/data/bw_xml.2/
 
 # Using the training data transcript for building the language model
 # Location of downloaded LM text
-LM_DIR=/data/sls/scratch/sameerk/mgb_arabic_data/lm
+LM_DIR=/data/scratch/mgb/data/mgb.arabic.lm.text.14.02.2016
 
 # Location of lexicon
-LEX_DIR=/data/sls/scratch/sameerk/mgb_arabic_data/lex
+LEX_DIR=ArabicASRChallenge2016/lexicon/
 
 nj=100  # split training into how many jobs?
-nDecodeJobs=60
+nDecodeJobs=80
 
 ##########################################################
 #
@@ -80,7 +78,7 @@ export XMLSTARLET SRILM IRSTLM
 
 #DATA PREPARATION
 echo "Preparing training data"
-local/mgb_data_prep.sh $WAV_DIR $XML_DIR $mer
+bash -x local/mgb_data_prep.sh $WAV_DIR $XML_DIR $mer
 
 #LEXICON PREPARATION: The lexicon is also provided
 echo "Preparing dictionary"
@@ -100,7 +98,7 @@ local/mgb_format_data.sh
 #Calculating mfcc features
 
 echo "Computing features"
-for x in train_mer$mer test_mer$mer ; do
+for x in train_mer$mer dev_non_overlap dev_overlap ; do
     mfccdir=data/mfcc_$x
     steps/make_mfcc.sh --nj $nj --cmd "$train_cmd" data/$x exp/mer$mer/make_mfcc/$x/log $mfccdir
     steps/compute_cmvn_stats.sh data/$x exp/mer$mer/make_mfcc/$x/log $mfccdir
@@ -125,7 +123,10 @@ steps/train_deltas.sh --cmd "$train_cmd" \
 #tri1 decoding
 utils/mkgraph.sh data/lang_test exp/mer$mer/tri1 exp/mer$mer/tri1/graph
 
-steps/decode.sh  --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config exp/mer$mer/tri1/graph data/test_mer$mer exp/mer$mer/tri1/decode
+for dev in overlap non_overlap; do
+  steps/decode.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
+    exp/mer$mer/tri1/graph data/dev_$dev exp/mer$mer/tri1/decode_$dev &
+done
 
 #tri1 alignment
 steps/align_si.sh --nj $nj --cmd "$train_cmd" \
@@ -138,7 +139,10 @@ steps/train_deltas.sh --cmd "$train_cmd" \
 #tri2 decoding
 utils/mkgraph.sh data/lang_test exp/mer$mer/tri2 exp/mer$mer/tri2/graph
 
-steps/decode.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config exp/mer$mer/tri2/graph data/test_mer$mer exp/mer$mer/tri2/decode
+for dev in overlap non_overlap; do
+ steps/decode.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
+ exp/mer$mer/tri2/graph data/dev_$dev exp/mer$mer/tri2/decode_$dev
+done
 
 #tri2 alignment
 steps/align_si.sh --nj $nj --cmd "$train_cmd" \
@@ -150,7 +154,12 @@ steps/train_lda_mllt.sh --cmd "$train_cmd" \
 
 #tri3 decoding
 utils/mkgraph.sh data/lang_test exp/mer$mer/tri3 exp/mer$mer/tri3/graph
-steps/decode.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config exp/mer$mer/tri3/graph data/test_mer$mer exp/mer$mer/tri3/decode 
+
+for dev in overlap non_overlap; do
+ steps/decode.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
+ exp/mer$mer/tri3/graph data/dev_$dev exp/mer$mer/tri3/decode_$dev
+done
+
 
 #tri3 alignment
 steps/align_si.sh --nj $nj --cmd "$train_cmd" --use-graphs true data/train_mer$mer data/lang exp/mer$mer/tri3 exp/mer$mer/tri3_ali
@@ -162,56 +171,31 @@ steps/train_sat.sh  --cmd "$train_cmd" \
 
 #sat decoding
 utils/mkgraph.sh data/lang_test exp/mer$mer/tri4 exp/mer$mer/tri4/graph
-steps/decode_fmllr.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config exp/mer$mer/tri4/graph data/test_mer$mer exp/mer$mer/tri4/decode
+
+for dev in overlap non_overlapdo
+  steps/decode_fmllr.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
+  exp/mer$mer/tri4/graph data/dev_$dev exp/mer$mer/tri4/decode_$dev
+done
 
 #sat alignment
 steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" data/train_mer$mer data/lang exp/mer$mer/tri4 exp/mer$mer/tri4_ali
 
-#MMI
-steps/make_denlats.sh --cmd "$train_cmd" --nj $nj --transform-dir exp/mer$mer/tri4_ali \
---config conf/decode.config \
-data/train_mer$mer data/lang exp/mer$mer/tri4 exp/mer$mer/tri4_denlats || exit 1;
-
-steps/decode.sh --cmd "$decode_cmd" --nj $nDecodeJobs --config conf/decode.config \
- --transform-dir exp/mer$mer/tri4/decode \
-exp/mer$mer/tri4/graph data/test_mer$mer exp/mer$mer/tri4_mmi_b0.1/decode || exit 1 ;
-
-# MPE                                                                                                                                 
-
-steps/train_mpe.sh  --cmd "$train_cmd" data/train_mer$mer data/lang exp/mer$mer/tri4_ali exp/mer$mer/tri4_denlats exp/mer$mer/tri4_mpe || exit 1;
-
-steps/decode.sh --cmd "$decode_cmd" --nj $nDecodeJobs --config conf/decode.config \
-  --transform-dir exp/mer$mer/tri4/decode \
-  exp/mer$mer/tri4/graph data/test_mer$mer exp/mer$mer/tri4_mpe/decode || exit 1 ;
-
-# SGMM system                                                                                                                                       
-steps/train_ubm.sh --cmd "$train_cmd" \
-  900 data/train_mer$mer data/lang exp/mer$mer/tri4_ali exp/mer$mer/ubm4 || exit 1;
-
-steps/train_sgmm2.sh --cmd "$train_cmd" \
-  14000 35000 data/train_mer$mer data/lang exp/mer$mer/tri4_ali \
-  exp/mer$mer/ubm4/final.ubm exp/mer$mer/sgmm2_4 || exit 1;
-
-utils/mkgraph.sh data/lang_test exp/mer$mer/sgmm2_4 exp/mer$mer/sgmm2_4/graph || exit 1;
-steps/decode_sgmm2.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
-  --transform-dir exp/mer$mer/tri4/decode \
-  exp/mer$mer/sgmm2_4/graph data/test_mer$mer exp/mer$mer/sgmm2_4/decode || exit 1;
-
-
-# NO NEURAL NETWORK SYSTEM FOR NOW.
 # nnet1 dnn                                                                                                                                
-#local/nnet/run_dnn.sh $mer
+local/nnet/run_dnn.sh $mer
 
-# nnet2                                                                                                                                    
-#local/nnet2/run_5d.sh $mer
-#local/nnet2/run_convnet.sh $mer
 
 time=$(date +"%Y-%m-%d-%H-%M-%S")
 
 #SCORING IS DONE USING SCLITE
-for x in exp/mer$mer/*/decode*; do [ -d $x ] && grep Sum $x/score_*/*.sys | utils/best_wer.sh; done | sort -n -r -k2 > RESULTS.$USER.$time
+for x in exp/*/*/decode*; do [ -d $x ] && grep Sum $x/score_*/*.sys | utils/best_wer.sh; done | sort -n -k2 > tmp$$
 
-#for x in exp/mer$mer/*/decode* exp/mer$mer/nnet2_online*/nnet_a_gpu*/decode* exp/mer$mer/seqDNN_lstm_combine ; do [ -d $x ] && grep Sum $x/score_*/*.sys | utils/best_wer.sh; \
-#done | sort -n -r -k2 > RESULTS.$USER.$time # to make sure you keep the results timed and owned
+echo "non_overlap_speech_WER:" > RESULTS
+echo "###" >> RESULTS
+grep decode_overlap tmp$$ >> RESULTS
+echo "" >> RESULTS
+echo "" >> RESULTS
+echo "overlap_speech_WER:" >> RESULTS
+echo "###" >> RESULTS
+grep decode_non_overlap tmp$$ >> RESULTS
+echo "" >> RESULTS
 
-#local/split_wer.sh $ > RESULTS.details.$USER.$time
