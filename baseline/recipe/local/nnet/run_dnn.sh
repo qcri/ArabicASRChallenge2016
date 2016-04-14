@@ -21,25 +21,29 @@ dnnMPEDir=exp/mer$mer/tri4_dnn_2048x5_smb
 
 trainTr90=data/train_mer${mer}_tr90
 trainCV=data/train_mer${mer}_cv10 
-#if false; then
-steps/nnet/make_fmllr_feats.sh --nj 10 --cmd "$cuda_cmd" \
-  --transform-dir $baseDir/decode data/test_mer${mer}_fmllr data/test_mer$mer \
-  $baseDir $mfcc_fmllr_dir/log_test_mer$mer $mfcc_fmllr_dir || exit 1;
+
+for dev in overlap non_overlap; do
+  steps/nnet/make_fmllr_feats.sh --nj 10 --cmd "$cuda_cmd" \
+    --transform-dir $baseDir/decode_$dev data/dev_${dev}_fmllr data/dev_${dev} \
+    $baseDir $mfcc_fmllr_dir/log_dev_${dev} $mfcc_fmllr_dir || exit 1;
+done
 
 steps/nnet/make_fmllr_feats.sh --nj 10 --cmd "$cuda_cmd" \
   --transform-dir $alignDir data/train_mer${mer}_fmllr data/train_mer$mer \
   $baseDir $mfcc_fmllr_dir/log_train_mer$mer $mfcc_fmllr_dir || exit 1;
                             
 utils/subset_data_dir_tr_cv.sh  data/train_mer${mer}_fmllr $trainTr90 $trainCV || exit 1;
-#fi
+
 (tail --pid=$$ -F $dnnDir/train_mer${mer}_nnet.log 2>/dev/null)& 
 $cuda_cmd $dnnDir/train_mer${mer}_nnet.log \
 steps/train_nnet.sh  --hid-dim 2048 --hid-layers 5 --learn-rate 0.008 \
   $trainTr90 $trainCV data/lang $alignDir $alignDir $dnnDir || exit 1;
 
-steps/decode_nnet.sh --nj $nDecodeJobs --cmd "$decode_cmd" \
-  --config conf/decode_dnn.config --nnet $dnnDir/final.nnet \
-  --acwt 0.08 $baseDir/graph data/test_mer${mer}_fmllr $dnnDir/decode
+for dev in overlap non_overlap; do
+  steps/decode_nnet.sh --nj $nDecodeJobs --cmd "$decode_cmd" \
+    --config conf/decode_dnn.config --nnet $dnnDir/final.nnet \
+    --acwt 0.08 $baseDir/graph data/dev_${dev}_fmllr $dnnDir/decode_$dev
+done
 
 #
 steps/nnet/align.sh --nj $nDecodeJobs --cmd "$train_cmd" data/train_mer${mer}_fmllr data/lang \
@@ -52,10 +56,12 @@ steps/nnet/train_mpe.sh --cmd "$cuda_cmd" --num-iters 6 --acwt 0.1 --do-smbr tru
   data/train_mer${mer}_fmllr data/lang $dnnDir $align_dnnDir $dnnLatDir $dnnMPEDir || exit 1;
 
 #decode
-for n in 1 2 3 4 5 6; do
-  steps/decode_nnet.sh --nj $nDecodeJobs --cmd "$train_cmd" --config conf/decode_dnn.config \
-  --nnet $dnnMPEDir/$n.nnet --acwt 0.08 \
-  $baseDir/graph data/test_mer${mer}_fmllr $dnnMPEDir/decode_test_it$n || exit 1;
+for dev in overlap non_overlap; do
+  for n in 1 2 3 4 5 6; do
+    steps/decode_nnet.sh --nj $nDecodeJobs --cmd "$train_cmd" --config conf/decode_dnn.config \
+    --nnet $dnnMPEDir/$n.nnet --acwt 0.08 \
+    $baseDir/graph data/dev_${dev}_fmllr $dnnMPEDir/decode_dev_${dev}_it$n || exit 1;
+  done
 done
 
 echo DNN success
