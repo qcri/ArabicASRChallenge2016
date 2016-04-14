@@ -26,6 +26,8 @@ for dev in overlap non_overlap; do
   steps/nnet/make_fmllr_feats.sh --nj 10 --cmd "$cuda_cmd" \
     --transform-dir $baseDir/decode_$dev data/dev_${dev}_fmllr data/dev_${dev} \
     $baseDir $mfcc_fmllr_dir/log_dev_${dev} $mfcc_fmllr_dir || exit 1;
+    cp data/dev_${dev}/reco2file_channel data/dev_${dev}_fmllr/reco2file_channel
+    cp data/dev_${dev}/test.stm data/dev_${dev}_fmllr/test.stm
 done
 
 steps/nnet/make_fmllr_feats.sh --nj 10 --cmd "$cuda_cmd" \
@@ -60,7 +62,7 @@ for dev in overlap non_overlap; do
   for n in 1 2 3 4 5 6; do
     steps/decode_nnet.sh --nj $nDecodeJobs --cmd "$train_cmd" --config conf/decode_dnn.config \
     --nnet $dnnMPEDir/$n.nnet --acwt 0.08 \
-    $baseDir/graph data/dev_${dev}_fmllr $dnnMPEDir/decode_dev_${dev}_it$n || exit 1;
+    $baseDir/graph data/dev_${dev}_fmllr $dnnMPEDir/decode_${dev}_it$n || exit 1;
   done
 done
 
