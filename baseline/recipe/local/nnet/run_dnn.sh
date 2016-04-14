@@ -6,8 +6,8 @@
 . ./path.sh
 . ./cmd.sh ## You'll want to change cmd.sh to something that will work on your system.
            ## This relates to the queue.
-nDecodeJobs=40
-nDecodeJobs=120
+nDecodeJobs=80
+
 mer=$1
 
 #train DNN
@@ -42,7 +42,7 @@ steps/train_nnet.sh  --hid-dim 2048 --hid-layers 5 --learn-rate 0.008 \
 for dev in overlap non_overlap; do
   steps/decode_nnet.sh --nj $nDecodeJobs --cmd "$decode_cmd" \
     --config conf/decode_dnn.config --nnet $dnnDir/final.nnet \
-    --acwt 0.08 $baseDir/graph data/dev_${dev}_fmllr $dnnDir/decode_$dev
+    --acwt 0.08 $baseDir/graph data/dev_${dev}_fmllr $dnnDir/decode_$dev &
 done
 
 #
