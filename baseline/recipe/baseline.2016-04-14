@@ -1,0 +1,30 @@
+#This baseline has been generated using filter for mer=80 and used 250.4 hours training data
+non_overlap_speech_WER:
+%WER 34.2 | 5002 59987 | 67.7 20.0 12.3 1.9 34.2 87.5 | exp/mer80/tri4_dnn_2048x5_smb/decode_non_overlap_it4/score_10/dev_non_overlap_fmllr.ctm.updated.sys
+%WER 34.4 | 5002 59987 | 67.9 21.1 11.0 2.3 34.4 87.8 | exp/mer80/tri4_dnn_2048x5_smb/decode_non_overlap_it3/score_9/dev_non_overlap_fmllr.ctm.updated.sys
+%WER 34.6 | 5002 59987 | 67.7 21.0 11.3 2.3 34.6 88.0 | exp/mer80/tri4_dnn_2048x5_smb/decode_non_overlap_it2/score_9/dev_non_overlap_fmllr.ctm.updated.sys
+%WER 35.0 | 5002 59987 | 67.3 21.0 11.7 2.3 35.0 87.9 | exp/mer80/tri4_dnn_2048x5_smb/decode_non_overlap_it1/score_9/dev_non_overlap_fmllr.ctm.updated.sys
+%WER 37.3 | 5002 59987 | 66.3 26.4 7.2 3.7 37.3 90.2 | exp/mer80/tri4_dnn_2048x5/decode_non_overlap/score_11/dev_non_overlap_fmllr.ctm.updated.sys
+%WER 40.5 | 5002 59987 | 62.9 23.1 14.0 3.4 40.5 92.2 | exp/mer80/tri4_dnn_2048x5_smb/decode_non_overlap_it6/score_9/dev_non_overlap_fmllr.ctm.updated.sys
+%WER 41.3 | 5002 59987 | 62.1 22.9 14.9 3.5 41.3 92.8 | exp/mer80/tri4_dnn_2048x5_smb/decode_non_overlap_it5/score_9/dev_non_overlap_fmllr.ctm.updated.sys
+%WER 44.8 | 5002 59987 | 59.7 31.3 9.0 4.6 44.8 94.3 | exp/mer80/tri4/decode_non_overlap/score_16/dev_non_overlap.ctm.updated.sys
+%WER 46.6 | 5002 59987 | 58.1 33.2 8.7 4.7 46.6 95.0 | exp/mer80/tri4/decode_non_overlap.si/score_14/dev_non_overlap.ctm.updated.sys
+%WER 47.1 | 5002 59987 | 57.6 33.2 9.2 4.7 47.1 95.4 | exp/mer80/tri3/decode_non_overlap/score_14/dev_non_overlap.ctm.updated.sys
+%WER 52.0 | 5002 59987 | 53.0 37.0 10.0 5.0 52.0 97.0 | exp/mer80/tri2/decode_non_overlap/score_14/dev_non_overlap.ctm.updated.sys
+%WER 55.4 | 5002 59987 | 48.0 37.3 14.7 3.4 55.4 97.5 | exp/mer80/tri1/decode_non_overlap/score_22/dev_non_overlap.ctm.updated.sys
+
+
+overlap_speech_WER:
+%WER 73.6 | 840 15220 | 28.6 25.6 45.8 2.2 73.6 100.0 | exp/mer80/tri4_dnn_2048x5_smb/decode_overlap_it4/score_6/dev_overlap_fmllr.ctm.updated.sys
+%WER 74.0 | 840 15220 | 27.9 23.2 48.9 1.9 74.0 100.0 | exp/mer80/tri4_dnn_2048x5_smb/decode_overlap_it3/score_7/dev_overlap_fmllr.ctm.updated.sys
+%WER 74.0 | 840 15220 | 28.9 36.4 34.7 3.0 74.0 100.0 | exp/mer80/tri4_dnn_2048x5/decode_overlap/score_11/dev_overlap_fmllr.ctm.updated.sys
+%WER 74.1 | 840 15220 | 27.8 22.5 49.7 1.8 74.1 100.0 | exp/mer80/tri4_dnn_2048x5_smb/decode_overlap_it2/score_7/dev_overlap_fmllr.ctm.updated.sys
+%WER 74.5 | 840 15220 | 27.2 21.2 51.6 1.8 74.5 100.0 | exp/mer80/tri4_dnn_2048x5_smb/decode_overlap_it1/score_7/dev_overlap_fmllr.ctm.updated.sys
+%WER 77.1 | 840 15220 | 26.1 37.2 36.7 3.2 77.1 100.0 | exp/mer80/tri4/decode_overlap/score_12/dev_overlap.ctm.updated.sys
+%WER 77.3 | 840 15220 | 24.2 25.1 50.7 1.5 77.3 99.9 | exp/mer80/tri4_dnn_2048x5_smb/decode_overlap_it6/score_8/dev_overlap_fmllr.ctm.updated.sys
+%WER 77.6 | 840 15220 | 25.7 41.1 33.2 3.3 77.6 100.0 | exp/mer80/tri4/decode_overlap.si/score_11/dev_overlap.ctm.updated.sys
+%WER 77.7 | 840 15220 | 25.7 41.5 32.8 3.4 77.7 100.0 | exp/mer80/tri3/decode_overlap/score_11/dev_overlap.ctm.updated.sys
+%WER 77.8 | 840 15220 | 24.0 26.6 49.4 1.8 77.8 99.9 | exp/mer80/tri4_dnn_2048x5_smb/decode_overlap_it5/score_6/dev_overlap_fmllr.ctm.updated.sys
+%WER 80.2 | 840 15220 | 22.6 40.6 36.8 2.9 80.2 100.0 | exp/mer80/tri2/decode_overlap/score_12/dev_overlap.ctm.updated.sys
+%WER 80.8 | 840 15220 | 22.0 41.1 36.9 2.8 80.8 100.0 | exp/mer80/tri1/decode_overlap/score_12/dev_overlap.ctm.updated.sys
+

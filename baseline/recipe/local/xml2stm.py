@@ -42,7 +42,7 @@ def loadXml(xmlFileName, opts):
     startTime = float(segment.attributes['starttime'].value)
     endTime = float(segment.attributes['endtime'].value)
 
-    tokens = [e.childNodes[0].data for e in segment.getElementsByTagName('element')]
+    tokens = [e.childNodes[0].data for e in segment.getElementsByTagName('element') if len(e.childNodes)]
     # skip any word starts with '#'
     tokens = filter(lambda i: not i.startswith('#'), tokens)
     # convert to buckwalter if required

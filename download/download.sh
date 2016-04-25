@@ -24,7 +24,7 @@ ext=$5    # File extension (wav, xml, ...)
 
 mkdir -p $folder
 
-while read v; do
+cat $file | while read v; do
    # For each file in the file list
    echo $v
    BASE=$(basename $v)
@@ -37,4 +37,4 @@ while read v; do
      # Run wget to temp destination and move to final destination
      wget -O $T ftp://${user}:${pass}@mgb-arabic.cloudapp.net/data/$ext/$v.$ext && mv $T $F
    fi
-done < $file
+done
