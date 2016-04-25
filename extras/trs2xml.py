@@ -38,7 +38,7 @@ def loadTrs(trsFileName, opts):
     if needUpdateEndTime:
       elements[-1].endTime = startTime
     # for empty segments, we don't need to update endtime
-    if text == "" or (opts.skip_bs and text.startswith('##')): 
+    if text == "" or (opts.skip_ol and text.startswith('##')): 
       needUpdateEndTime = False
       continue
     elements.append(e)
@@ -102,10 +102,13 @@ def tra(data, speakers, opts):
   for i,e in enumerate(data['turn']):
     startTime = format_timestamp(e.startTime)
     endTime = format_timestamp(e.endTime)
-    if opts.skip_bs and e.text.startswith('@@@'): continue
+    if opts.skip_ns and e.text.startswith('@@@'): continue
     tokens = e.text.split()
-    speaker = speakers[i]
-    speaker = speaker.replace(u' ', u'-')
+    if speakers:
+      speaker = speakers[i]
+      speaker = speaker.replace(u' ', u'-')
+    else:
+      speaker = "unknown"
     awd = (e.endTime - e.startTime) / len(tokens)
     out.write(u"{}.xml_{}_{}_{} ".format(data['id'], speaker, startTime, endTime))
     out.write(e.text)
@@ -197,8 +200,10 @@ if __name__ == '__main__':
                       help="output ctm file for testing")
   parser.add_argument("--tra", dest="tra", default=False, action='store_true',
                       help="output tra file")
-  parser.add_argument("--skip-bad-segments", dest="skip_bs", default=False, action='store_true',
-                      help="skip segments with ###, these are either overlapped speech or unintelligible speech")
+  parser.add_argument("--skip-overlaps", dest="skip_ol", default=False, action='store_true',
+                      help="skip segments with ###, these are overlapped speech")
+  parser.add_argument("--skip-nonspeech", dest="skip_ns", default=False, action='store_true',
+                      help="skip segments with @@@, these are non-speech segments")
   parser.add_argument(dest="trsFileName", metavar="trs", type=str)
   parser.add_argument(dest="xmlFileName", metavar="xml", type=str)
   args = parser.parse_args()
