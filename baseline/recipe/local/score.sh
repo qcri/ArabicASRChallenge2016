@@ -70,10 +70,10 @@ if [ $stage -le 1 ]; then
   done
 fi  
 
-
 if [ $stage -le 2 ]; then
   $cmd LMWT=$min_lmwt:$max_lmwt $dir/scoring/log/score.LMWT.log \
-    cp $data/test.stm $dir/score_LMWT/ '&&' \
-    sclite -O $dir/score_LMWT -o all spk -h $dir/score_LMWT/${name}.ctm.updated ctm -r $data/test.stm stm || exit 1;  
+    local/toutf8.py $dir/score_LMWT/${name}.ctm.updated $dir/score_LMWT/${name}.ctm.updated.utf8 '&&' \
+    local/toutf8.py $data/test.stm $dir/score_LMWT/test.stm '&&' \
+    sclite -O $dir/score_LMWT -o all spk -h $dir/score_LMWT/${name}.ctm.updated.utf8 ctm -r $dir/score_LMWT/test.stm stm || exit 1;  
 fi 
 
