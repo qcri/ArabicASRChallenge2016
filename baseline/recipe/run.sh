@@ -172,7 +172,7 @@ steps/train_sat.sh  --cmd "$train_cmd" \
 #sat decoding
 utils/mkgraph.sh data/lang_test exp/mer$mer/tri4 exp/mer$mer/tri4/graph
 
-for dev in overlap non_overlapdo
+for dev in overlap non_overlap; do
   steps/decode_fmllr.sh --nj $nDecodeJobs --cmd "$decode_cmd" --config conf/decode.config \
   exp/mer$mer/tri4/graph data/dev_$dev exp/mer$mer/tri4/decode_$dev
 done
