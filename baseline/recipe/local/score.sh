@@ -53,12 +53,11 @@ if [ $stage -le 0 ]; then
     nbest-to-ctm ark:- - \| \
     utils/int2sym.pl -f 5 $symtab  \| \
     utils/convert_ctm.pl $data/segments $data/reco2file_channel \
-    '>' $dir/score_LMWT/${name}.ctm || exit 1;
+    '>' $dir/score_LMWT/${name}.ctm '&&' \
+    grep -v '<UNK>' $dir/score_LMWT/${name}.ctm \| \
+    sed -e 's:^[^ ]*\/::' -e 's:.wav::' \| sort -k1,1 -k3,3n \
+    '>' $dir/score_LMWT/${name}.ctm.updated || exit 1;
 fi    
-
-for x in $dir/score_*/$name.ctm; do
- local/cleanctm.sh $x $dir $data
-done
 
 # Remove some stuff we don't want to score, from the ctm.                                                                                                   
 
