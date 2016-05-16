@@ -57,7 +57,7 @@ def loadXml(xmlFileName, opts):
 def stm(data):
   out = codecs.getwriter('utf-8')(sys.stdout)
   for e in data['turn']:
-    out.write("{} 0 UNKNOWN {:.02f} {:.02f} <> ".format(data['id'], e.startTime, e.endTime)) 
+    out.write("{} 0 UNKNOWN {:.02f} {:.02f} ".format(data['id'], e.startTime, e.endTime)) 
     out.write(e.text)
     out.write("\n")
 
