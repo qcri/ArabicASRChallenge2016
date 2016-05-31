@@ -15,3 +15,6 @@ tlAt     => vlAv / [ ] __ [ ]  ;; number 3
 tlAtp    => vlAvp / [ ] __ [ ] ;; number 3
 tmAn     => vmAn / [ ] __ [ ] ;; number 8
 tmAnyp   => vmAnyp / [ ] __ [ ] ;; number 8
+
+;; END of GLM file
+
