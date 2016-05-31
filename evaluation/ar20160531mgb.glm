@@ -1,0 +1,17 @@
+;;  File: ar20160531mgb.glm
+;;
+
+* name "ar20160531mgb.glm"
+* desc "The Global Mapping File (GLM)for the Arabic MGB task scoring"
+* format = 'NIST1'
+* max_nrules = '2500'
+* copy_no_hit = 'T'
+* case_sensitive = 'F'
+
+;; Arabic Numbers (Bucwlater Transliteration)
+Atnyn    => Avnyn / [ ] __ [ ] ;; number 2
+tntyn    => Avntyn / [ ] __ [ ] ;; number 2
+tlAt     => vlAv / [ ] __ [ ]  ;; number 3
+tlAtp    => vlAvp / [ ] __ [ ] ;; number 3
+tmAn     => vmAn / [ ] __ [ ] ;; number 8
+tmAnyp   => vmAnyp / [ ] __ [ ] ;; number 8
