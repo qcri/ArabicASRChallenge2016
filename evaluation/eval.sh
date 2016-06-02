@@ -1,5 +1,7 @@
 #!/bin/bash 
 
+export PATH=sctk/bin:$PATH
+
 EVALSTM=$1    # utf8 reference in stm format
 EVALCTM=$2    # utf8 recognition result in ctm format
 
