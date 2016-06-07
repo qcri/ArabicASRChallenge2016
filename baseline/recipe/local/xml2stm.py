@@ -46,7 +46,7 @@ def loadXml(xmlFileName, opts):
   elements = []
   for segment in segments.getElementsByTagName('segment'):
     sid = segment.attributes['id'].value.split('_utt_')[0].replace("_","-")
-    speakerid = re.search(r'(P<id>speaker\d+)', segment.attributes['who'].value).group('id')
+    speakerid = re.search(r'(?P<id>speaker\d+)', segment.attributes['who'].value).group('id')
     startTime = float(segment.attributes['starttime'].value)
     endTime = float(segment.attributes['endtime'].value)
 
