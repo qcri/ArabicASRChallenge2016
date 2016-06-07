@@ -9,6 +9,7 @@
 __author__ = 'Yifan Zhang (yzhang@qf.org.qa)'
 
 import os
+import re
 import sys
 import time
 import codecs
