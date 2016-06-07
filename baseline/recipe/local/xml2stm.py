@@ -40,7 +40,7 @@ def loadXml(xmlFileName, opts):
   speakers = trans.getElementsByTagName('speakers')[0]
   speakerId2Name = {}
   for speaker in speakers.getElementsByTagName('speaker'):
-    speakerid = re.search(r'(P<id>speaker\d+)', speaker.attributes['id'].value).group('id')
+    speakerid = re.search(r'(?P<id>speaker\d+)', speaker.attributes['id'].value).group('id')
     speakerId2Name[speakerid] = speaker.attributes['name'].value
   segments = trans.getElementsByTagName('segments')[0]
   elements = []
