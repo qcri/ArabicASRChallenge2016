@@ -9,5 +9,5 @@ if [[ -s arabic_utf8.glm ]]; then
   GLM="-g arabic_utf8.glm"
 fi
 
-
-hubscr.pl -d -V -f ctm -F stm -l arabic -h hub5 $GLM -r $EVALSTM $EVALCTM
+../baseline/recipe/local/toutf8.py $EVALCTM $EVALCTM.utf8
+hubscr.pl -d -V -f ctm -F stm -l arabic -h hub5 $GLM -r $EVALSTM $EVALCTM.utf8
