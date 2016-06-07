@@ -27,18 +27,25 @@ def fromBuckWalter(s):
   return s.translate(_backwardMap)
 
 class Element(object):
-  def __init__(self, text, startTime, endTime=None):
+  def __init__(self, text, startTime, endTime=None, who=None):
     self.text = text
     self.startTime = startTime
     self.endTime = endTime
+    self.who = who
 
 def loadXml(xmlFileName, opts):
   dom = minidom.parse(open(xmlFileName, 'r'))
   trans = dom.getElementsByTagName('transcript')[0]
+  speakers = trans.getElementsByTagName('speakers')[0]
+  speakerId2Name = {}
+  for speaker in speakers.getElementsByTagName('speaker'):
+    speakerid = re.search(r'(P<id>speaker\d+)', speaker.attributes['id'].value).group('id')
+    speakerId2Name[speakerid] = speaker.attributes['name'].value
   segments = trans.getElementsByTagName('segments')[0]
   elements = []
   for segment in segments.getElementsByTagName('segment'):
     sid = segment.attributes['id'].value.split('_utt_')[0].replace("_","-")
+    speakerid = re.search(r'(P<id>speaker\d+)', segment.attributes['who'].value).group('id')
     startTime = float(segment.attributes['starttime'].value)
     endTime = float(segment.attributes['endtime'].value)
 
@@ -51,13 +58,13 @@ def loadXml(xmlFileName, opts):
 
     text = ' '.join(tokens)
 
-    elements.append(Element(text, startTime, endTime))
+    elements.append(Element(text, startTime, endTime, speakerId2Name.get(speakerid, 'UNKNOWN')))
   return {'id': sid, 'turn': elements}
 
 def stm(data):
   out = codecs.getwriter('utf-8')(sys.stdout)
   for e in data['turn']:
-    out.write("{} 0 UNKNOWN {:.02f} {:.02f} ".format(data['id'], e.startTime, e.endTime)) 
+    out.write("{} 0 {} {:.02f} {:.02f} ".format(data['id'], e.who, e.startTime, e.endTime)) 
     out.write(e.text)
     out.write("\n")
 
