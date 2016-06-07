@@ -109,6 +109,8 @@ def tra(data, speakers, opts):
       speaker = speaker.replace(u' ', u'-')
     else:
       speaker = "unknown"
+    if e.text.startswith('###'):
+      speaker = "overlap"
     awd = (e.endTime - e.startTime) / len(tokens)
     out.write(u"{}.xml_{}_{}_{} ".format(data['id'], speaker, startTime, endTime))
     out.write(e.text)
