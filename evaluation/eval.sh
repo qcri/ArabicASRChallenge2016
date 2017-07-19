@@ -12,7 +12,7 @@ EVALCTM=$2    # utf8 recognition result in ctm format
 BUCKWALTER=${3-false}     # true if input ctm is in buckwalter
 
 if [[ -s arabic_utf8.glm ]]; then
-  GLM="-g arabic_utf8.glm"
+  GLM="-g ar20160531mgb.glm"
 fi
 
 if $BUCKWALTER; then
